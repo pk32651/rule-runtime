@@ -50,6 +50,8 @@ const AGNES_URLS = {
   global: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Global/Global.list",
   foreign_extra: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ForeignExtra.list",
   cncidr: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/cncidr.txt",
+  apple_cn: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/apple.txt",
+  china_direct: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/direct.txt",
 };
 
 function agnesUnique(items) {
@@ -421,10 +423,10 @@ async function main(config = {}) {
 
   const ruleProviders = {};
   for (const name of Object.keys(AGNES_URLS)) {
-    ruleProviders[name] = agnesRuleProvider(
-      name,
-      name === "cncidr" ? "ipcidr" : "classical",
-    );
+    let behavior = "classical";
+    if (name === "cncidr") behavior = "ipcidr";
+    else if (name === "apple_cn" || name === "china_direct") behavior = "domain";
+    ruleProviders[name] = agnesRuleProvider(name, behavior);
   }
 
   config.proxies = proxies;
@@ -462,7 +464,9 @@ async function main(config = {}) {
     "RULE-SET,spotify,📀 音乐",
     "RULE-SET,github,📘 GitHub",
 
-    // 5. 国内大盘快速旁路（90%国内主流流量在此瞬间命中直连，极大提升响应并降低计算开销）
+    // 5. 国内大盘快速旁路（按小规模高频到全量大盘智能排序，瞬间命中直连并短路）
+    "RULE-SET,apple_cn,➡️ 国内",
+    "RULE-SET,china_direct,➡️ 国内",
     "GEOSITE,cn,➡️ 国内",
     "RULE-SET,cncidr,➡️ 国内,no-resolve",
     "GEOIP,CN,➡️ 国内,no-resolve",
