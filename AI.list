@@ -80,6 +80,15 @@ DOMAIN,notebooklm-pa.googleapis.com
 DOMAIN,content-notebooklm-pa.googleapis.com
 DOMAIN-SUFFIX,cursor.com
 DOMAIN-SUFFIX,cursor.sh
+DOMAIN-SUFFIX,cursorapi.com
+DOMAIN-SUFFIX,cursor-cdn.com
+DOMAIN-SUFFIX,cursorvm.com
+DOMAIN-SUFFIX,anysphere.co
+DOMAIN-SUFFIX,anysphere.inc
+DOMAIN-SUFFIX,anysphere.com
+DOMAIN-SUFFIX,workos.com
+DOMAIN-SUFFIX,authkit.com
+DOMAIN-SUFFIX,todesktop.com
 DOMAIN-SUFFIX,poe.com
 DOMAIN-SUFFIX,coze.com
 DOMAIN-SUFFIX,mistral.ai
