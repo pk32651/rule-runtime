@@ -461,14 +461,21 @@ async function main(config = {}) {
     "RULE-SET,adobe_activation,💧 RJ",
     "RULE-SET,lan,➡️ 国内",
 
-    // 单设备专属（10.10.10.231）：抖音 & 小红书核心信令与属地 API（方案 B：仅信令走代理，音视频/大图 CDN 保持直连）
-    // 抖音核心信令
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,amemv.com)),📍 社交定位`,
+    // 单设备专属（10.10.10.231）：抖音 & 小红书定向漏斗规则
+    // 【上半部：直播与音视频媒体 强制直连（第一优先级，提前截胡）】
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-KEYWORD,webcast)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,live.douyin.com)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,douyinvod.com)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,douyincdn.com)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xdrtc.com)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,ndcpp.com)),➡️ 国内`,
+
+    // 【下半部：社交发评与账号信令（第二优先级，稳走香港定位）】
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,snssdk.com)),📍 社交定位`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,zijieapi.com)),📍 社交定位`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,aweme.com)),📍 社交定位`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,amemv.com)),📍 社交定位`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,zijieapi.com)),📍 社交定位`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,douyin.com)),📍 社交定位`,
-    // 小红书核心信令
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xiaohongshu.com)),📍 社交定位`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xhslink.com)),📍 社交定位`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,fengkongcloud.com)),📍 社交定位`,
