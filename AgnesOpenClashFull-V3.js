@@ -132,7 +132,8 @@ async function main(config = {}) {
   if (staticProxies[0].type !== "socks5") {
     throw new Error("AGNES: Webshare-Private must be a socks5 proxy");
   }
-  staticProxies[0].udp = false;
+  staticProxies[0].udp = true;
+  staticProxies[0]["dialer-proxy"] = "香港-自动";
 
   const staticNames = staticProxies.map((proxy) => proxy.name);
   const regularProxies = proxies.filter(
