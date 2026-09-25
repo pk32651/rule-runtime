@@ -463,6 +463,7 @@ async function main(config = {}) {
 
     // 单设备专属（10.10.10.231）：抖音 & 小红书定向漏斗规则
     // 【上半部：直播与音视频媒体 强制直连（第一优先级，提前截胡）】
+    // --- 抖音直连 ---
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-KEYWORD,webcast)),➡️ 国内`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,live.douyin.com)),➡️ 国内`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,douyinvod.com)),➡️ 国内`,
@@ -470,12 +471,28 @@ async function main(config = {}) {
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xdrtc.com)),➡️ 国内`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,ndcpp.com)),➡️ 国内`,
 
+    // --- 小红书直连（媒体 CDN、短视频、超清图片与直播推拉流，零延迟秒开）---
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xhscdn.com)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xhscdn.net)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xhsrcdn.com)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,rednotecdn.com)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,live.xiaohongshu.com)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,live-play.xiaohongshu.com)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,live-push.xiaohongshu.com)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,picasso.xiaohongshu.com)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,res.xiaohongshu.com)),➡️ 国内`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,static.xiaohongshu.com)),➡️ 国内`,
+
     // 【下半部：社交发评与账号信令（第二优先级，稳走香港定位）】
+    // --- 抖音定位 ---
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,snssdk.com)),📍 社交定位`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,aweme.com)),📍 社交定位`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,amemv.com)),📍 社交定位`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,zijieapi.com)),📍 社交定位`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,douyin.com)),📍 社交定位`,
+
+    // --- 小红书定位 ---
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,edith.xiaohongshu.com)),📍 社交定位`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xiaohongshu.com)),📍 社交定位`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xhslink.com)),📍 社交定位`,
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,fengkongcloud.com)),📍 社交定位`,
