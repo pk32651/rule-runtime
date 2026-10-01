@@ -20,6 +20,7 @@ const AGNES_TEST_INTERVAL = 300;
 const AGNES_TEST_TIMEOUT = 5000;
 const AGNES_TEST_TOLERANCE = 150;
 const AGNES_STATIC_PROXY_NAME = "Webshare-Private";
+const AGNES_WEBSHARE_DIALER_GROUP = "Webshare-前置";
 const AGNES_TARGET_SPOOF_IP = "10.10.10.231";
 
 const AGNES_URLS = {
@@ -136,7 +137,7 @@ async function main(config = {}) {
     throw new Error("AGNES: Webshare-Private must be a socks5 proxy");
   }
   staticProxies[0].udp = true;
-  staticProxies[0]["dialer-proxy"] = "香港-自动";
+  staticProxies[0]["dialer-proxy"] = AGNES_WEBSHARE_DIALER_GROUP;
 
   const staticNames = staticProxies.map((proxy) => proxy.name);
   const regularProxies = proxies.filter(
@@ -167,6 +168,9 @@ async function main(config = {}) {
   );
 
   const groups = [];
+  groups.push(
+    agnesSelect(AGNES_WEBSHARE_DIALER_GROUP, ["香港-自动", "DIRECT"]),
+  );
   const addBusinessGroup = (name, choices) =>
     groups.push(agnesSelect(name, agnesAppendStatic(choices, staticNames)));
 
