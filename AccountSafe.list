@@ -1,2 +1,7 @@
 DOMAIN,studio.youtube.com
 DOMAIN,upload.youtube.com
+DOMAIN,accounts.google.com
+DOMAIN,myaccount.google.com
+DOMAIN,accounts.youtube.com
+DOMAIN,oauth2.googleapis.com
+DOMAIN,securetoken.googleapis.com

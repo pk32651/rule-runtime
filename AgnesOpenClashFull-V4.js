@@ -28,7 +28,7 @@ const AGNES_URLS = {
   adobe_activation: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/AdobeActivation/AdobeActivation.list",
   lan: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Lan/Lan.list",
   leak_test: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/LeakTest.list",
-  account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=3",
+  account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=4",
   agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=9",
   youtube: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTube/YouTube.list",
   google_mobile: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/GoogleMobile.list",
@@ -98,6 +98,10 @@ function agnesRuleProvider(name, behavior = "classical") {
 
 function agnesAppendStatic(choices, staticNames) {
   return agnesUnique([...choices, ...staticNames]);
+}
+
+function agnesPrependStatic(choices, staticNames) {
+  return agnesUnique([...staticNames, ...choices]);
 }
 
 async function main(config = {}) {
@@ -172,8 +176,10 @@ async function main(config = {}) {
   );
   const addBusinessGroup = (name, choices) =>
     groups.push(agnesSelect(name, agnesAppendStatic(choices, staticNames)));
+  const addStableGroup = (name, choices) =>
+    groups.push(agnesSelect(name, agnesPrependStatic(choices, staticNames)));
 
-  addBusinessGroup("🔐 账号安全", [
+  addStableGroup("🔐 账号安全", [
     "台湾-自动",
     "台湾-手动",
     "所有-自动",
@@ -219,7 +225,7 @@ async function main(config = {}) {
       "其他-自动",
     ]),
   );
-  addBusinessGroup("👽 AI", [
+  addStableGroup("👽 AI", [
     "台湾-自动",
     "台湾-手动",
     "日本-自动",
@@ -509,7 +515,8 @@ async function main(config = {}) {
     "RULE-SET,leak_test,🌍 国外",
     "RULE-SET,account_safe,🔐 账号安全",
     "RULE-SET,agnes_ai,👽 AI",
-    "RULE-SET,youtube,📀 流媒体",
+    // YouTube 整表跟账号走同一个固定出口，避免登录在 Webshare、播放在会跳的香港节点。
+    "RULE-SET,youtube,🔐 账号安全",
     "RULE-SET,google_mobile,📱 Google移动服务",
     "RULE-SET,google_fcm,📱 Google移动服务",
     "RULE-SET,google,📱 Google移动服务",
@@ -546,10 +553,10 @@ async function main(config = {}) {
     "RULE-SET,foreign_extra,🌍 国外",
     "GEOSITE,geolocation-!cn,🌍 国外",
     "IP-CIDR6,::/0,🛡 IPv6兜底,no-resolve",
-    // 国内 STUN 已在上面的 GEOIP,CN 命中。这里只接国外 IPv4 的 WebRTC 打洞端口。
-    "AND,((NETWORK,udp),(DST-PORT,3478)),🌍 国外",
-    "AND,((NETWORK,udp),(DST-PORT,19302)),🌍 国外",
-    "AND,((NETWORK,udp),(DST-PORT,5349)),🌍 国外",
+    // 国内 STUN 已在上面的 GEOIP,CN 命中。国外这三个端口直接拒绝，不返回映射地址。
+    "AND,((NETWORK,udp),(DST-PORT,3478)),REJECT",
+    "AND,((NETWORK,udp),(DST-PORT,19302)),REJECT",
+    "AND,((NETWORK,udp),(DST-PORT,5349)),REJECT",
     "DST-PORT,80,🐟 未匹配流量",
     "DST-PORT,443,🐟 未匹配流量",
     "MATCH,DIRECT",

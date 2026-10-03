@@ -4,9 +4,6 @@ DOMAIN,android.googleapis.com
 DOMAIN,android.apis.google.com
 DOMAIN,services.googleapis.cn
 DOMAIN-SUFFIX,xn--ngstr-lra8j.com
-DOMAIN,accounts.google.com
-DOMAIN,oauth2.googleapis.com
-DOMAIN,securetoken.googleapis.com
 DOMAIN,firebaseinstallations.googleapis.com
 DOMAIN,connectivitycheck.gstatic.com
 DOMAIN,clients3.google.com

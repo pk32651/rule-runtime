@@ -181,6 +181,11 @@ function main(config) {
     // 4. AI 使用手动选择组，不进自动选优，避免账号出口来回跳
     "RULE-SET,agnes_ai,👽 AI",
 
+    // 国内 STUN 已在 GEOIP,CN 命中。国外打洞端口直接拒绝。
+    "AND,((NETWORK,udp),(DST-PORT,3478)),REJECT",
+    "AND,((NETWORK,udp),(DST-PORT,19302)),REJECT",
+    "AND,((NETWORK,udp),(DST-PORT,5349)),REJECT",
+
     // 5. 其余所有识别不到的流量（统一走代理）
     "MATCH,🚀 节点选择"
   ];
