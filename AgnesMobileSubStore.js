@@ -109,6 +109,18 @@ function main(config) {
       name: "🐸 全部节点",
       type: "select",
       proxies: proxyNames.length > 0 ? proxyNames : ["DIRECT"]
+    },
+    {
+      name: "👽 AI",
+      type: "select",
+      proxies: [
+        "🚀 节点选择",
+        "🇭🇰 香港-自动",
+        "🇹🇼 台湾-自动",
+        "🇯🇵 日本-自动",
+        "🇸🇬 新加坡-自动",
+        "🇺🇸 美国-自动"
+      ]
     }
   ];
 
@@ -136,6 +148,14 @@ function main(config) {
       url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/cncidr.txt",
       path: "./rule_provider/china_ip_cidr.txt",
       interval: 86400
+    },
+    agnes_ai: {
+      type: "http",
+      behavior: "classical",
+      format: "text",
+      url: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=9",
+      path: "./rule_provider/agnes_ai.list",
+      interval: 86400
     }
   };
 
@@ -158,7 +178,10 @@ function main(config) {
     "RULE-SET,china_ip_cidr,DIRECT,no-resolve",
     "GEOIP,CN,DIRECT,no-resolve",
 
-    // 4. 其余所有识别不到的流量（统一走代理）
+    // 4. AI 使用手动选择组，不进自动选优，避免账号出口来回跳
+    "RULE-SET,agnes_ai,👽 AI",
+
+    // 5. 其余所有识别不到的流量（统一走代理）
     "MATCH,🚀 节点选择"
   ];
 
@@ -187,21 +210,23 @@ function main(config) {
       ],
       "default-nameserver": ["223.5.5.5", "119.29.29.29"],
       "proxy-server-nameserver": ["223.5.5.5", "119.29.29.29"],
+      // 国外 DoH 经代理在长时间使用后会变慢。短时复测没有复现，手机仍保持国内加密 DNS，并强制直连。
       nameserver: [
-        "https://dns.alidns.com/dns-query",
-        "https://doh.pub/dns-query"
+        "https://dns.alidns.com/dns-query#DIRECT",
+        "https://doh.pub/dns-query#DIRECT"
       ],
       "nameserver-policy": {
         "geosite:cn": [
-          "https://dns.alidns.com/dns-query",
-          "https://doh.pub/dns-query"
+          "https://dns.alidns.com/dns-query#DIRECT",
+          "https://doh.pub/dns-query#DIRECT"
         ],
         "geosite:apple-cn": [
-          "https://dns.alidns.com/dns-query",
-          "https://doh.pub/dns-query"
+          "https://dns.alidns.com/dns-query#DIRECT",
+          "https://doh.pub/dns-query#DIRECT"
         ],
         "geosite:geolocation-!cn": [
-          "https://dns.alidns.com/dns-query"
+          "https://dns.alidns.com/dns-query#DIRECT",
+          "https://doh.pub/dns-query#DIRECT"
         ]
       }
     },
