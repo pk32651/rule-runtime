@@ -460,11 +460,6 @@ async function main(config = {}) {
     "IP-CIDR,172.16.0.0/12,➡️ 国内,no-resolve",
     "IP-CIDR6,fc00::/7,➡️ 国内,no-resolve",
     "IP-CIDR6,fe80::/10,➡️ 国内,no-resolve",
-    // 国外解析器使用 IP，直连以避免域名规则把 DoH 再送进香港节点。
-    "IP-CIDR,1.1.1.1/32,DIRECT,no-resolve",
-    "IP-CIDR,1.0.0.1/32,DIRECT,no-resolve",
-    "IP-CIDR,8.8.8.8/32,DIRECT,no-resolve",
-    "IP-CIDR,8.8.4.4/32,DIRECT,no-resolve",
     "RULE-SET,adobe,💧 RJ",
     "RULE-SET,adobe_activation,💧 RJ",
     "RULE-SET,lan,➡️ 国内",
