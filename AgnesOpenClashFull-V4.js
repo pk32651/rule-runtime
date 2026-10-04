@@ -172,7 +172,7 @@ async function main(config = {}) {
 
   const groups = [];
   groups.push(
-    agnesSelect(AGNES_WEBSHARE_DIALER_GROUP, ["香港-自动", "DIRECT"]),
+    agnesSelect(AGNES_WEBSHARE_DIALER_GROUP, ["香港-自动", "日本-自动", "DIRECT"]),
   );
   const addBusinessGroup = (name, choices) =>
     groups.push(agnesSelect(name, agnesAppendStatic(choices, staticNames)));
