@@ -182,6 +182,7 @@ async function main(config = {}) {
   addStableGroup("🔐 账号安全", [
     "台湾-自动",
     "台湾-手动",
+    "日本-自动",
     "所有-自动",
     "所有-手动",
     "🐸 手动切换",
