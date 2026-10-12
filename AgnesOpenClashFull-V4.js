@@ -8,7 +8,7 @@
  * supplies the established AGNES policy groups, rule providers and rule order.
  *
  * V4 Improvements (preserves all V3 optimizations):
- * 1. Single-device fine-grained location routing for Douyin & Xiaohongshu (10.10.10.231).
+ * 1. Single-device fine-grained location routing for Douyin & Xiaohongshu (10.10.10.6).
  * 2. Signaling / Account / Feed APIs routed to 【📍 社交定位】 (default: Hong Kong).
  * 3. Media CDN (douyinvod, xhscdn) remains 100% domestic DIRECT (fast, no proxy data burned).
  * 4. All other household devices completely isolated from this rule (normal domestic direct).
@@ -21,7 +21,7 @@ const AGNES_TEST_TIMEOUT = 5000;
 const AGNES_TEST_TOLERANCE = 150;
 const AGNES_STATIC_PROXY_NAME = "Webshare-Private";
 const AGNES_WEBSHARE_DIALER_GROUP = "Webshare-前置";
-const AGNES_TARGET_SPOOF_IP = "10.10.10.231";
+const AGNES_TARGET_SPOOF_IP = "10.10.10.6";
 
 const AGNES_URLS = {
   adobe: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Adobe/Adobe.list",
@@ -49,7 +49,7 @@ const AGNES_URLS = {
   blizzard: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Blizzard/Blizzard.list",
   ea: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/EA/EA.list",
   github: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/GitHub/GitHub.list",
-  agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=4",
+  agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=5",
   global: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Global/Global.list",
   foreign_extra: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ForeignExtra.list",
   cncidr: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/cncidr.txt",
@@ -471,7 +471,7 @@ async function main(config = {}) {
     "RULE-SET,adobe_activation,💧 RJ",
     "RULE-SET,lan,➡️ 国内",
 
-    // 单设备专属（10.10.10.231）：抖音 & 小红书定向漏斗规则
+    // 单设备专属（10.10.10.6）：抖音 & 小红书定向漏斗规则
     // 【上半部：直播与音视频媒体 强制直连（第一优先级，提前截胡）】
     // --- 抖音直连 ---
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-KEYWORD,webcast)),➡️ 国内`,
