@@ -5,9 +5,10 @@
  * supplies proxies, including the single socks5 node Webshare-Private.
  * This script supplies a small TUN config for one computer.
  *
- * Gemini, OpenAI and Google each have their own selector:
- *   Webshare-Private = on, through Webshare-前置
- *   DIRECT           = off, hand the flow to the home gateway
+ * Each of Gemini, OpenAI and 谷歌服务 selects Webshare-Private, its own
+ * manual group, or DIRECT. Each manual group lists non-game airport lines
+ * and is independent. Webshare-Private still goes through Webshare-前置.
+ * DIRECT still hands the flow to the home gateway.
  * Webshare-前置 is 香港-自动, 日本-自动, then DIRECT. Same order as the gateway.
  *
  * Other traffic is DIRECT. The gateway still applies its own policy.
@@ -105,11 +106,18 @@ async function main(config = {}) {
       .filter((proxy) => !/游戏/.test(proxy.name) && pattern.test(proxy.name))
       .map((proxy) => proxy.name);
 
+  const manualNames = regularProxies
+    .filter((proxy) => !/游戏/.test(proxy.name))
+    .map((proxy) => proxy.name);
+
   const groups = [
     agnesSelect(AGNES_WEBSHARE_DIALER_GROUP, ["香港-自动", "日本-自动", "DIRECT"]),
-    agnesSelect("Gemini", [AGNES_STATIC_PROXY_NAME, "DIRECT"]),
-    agnesSelect("OpenAI", [AGNES_STATIC_PROXY_NAME, "DIRECT"]),
-    agnesSelect("谷歌服务", [AGNES_STATIC_PROXY_NAME, "DIRECT"]),
+    agnesSelect("Gemini", [AGNES_STATIC_PROXY_NAME, "Gemini-手动", "DIRECT"]),
+    agnesSelect("OpenAI", [AGNES_STATIC_PROXY_NAME, "OpenAI-手动", "DIRECT"]),
+    agnesSelect("谷歌服务", [AGNES_STATIC_PROXY_NAME, "谷歌服务-手动", "DIRECT"]),
+    agnesSelect("Gemini-手动", manualNames),
+    agnesSelect("OpenAI-手动", manualNames),
+    agnesSelect("谷歌服务-手动", manualNames),
     agnesUrlTest("香港-自动", matchRegular(/香港/)),
     agnesUrlTest("日本-自动", matchRegular(/日本/)),
   ];
