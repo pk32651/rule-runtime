@@ -5,9 +5,11 @@
  * supplies proxies, including the single socks5 node Webshare-Private.
  * This script supplies a small TUN config for one computer.
  *
- * Each of Gemini, OpenAI and 谷歌服务 selects Webshare-Private, its own
- * manual group, or DIRECT. Each manual group lists non-game airport lines
- * and is independent. Webshare-Private still goes through Webshare-前置.
+ * Gemini, Antigravity, OpenAI and 谷歌服务 each select Webshare-Private,
+ * their own manual group, or DIRECT. Each manual group lists non-game
+ * airport lines and is independent. Webshare-Private still goes through
+ * Webshare-前置. Antigravity rules are ahead of Gemini and Google.
+ * The shared host generativelanguage.googleapis.com stays in Gemini.list.
  * DIRECT still hands the flow to the home gateway.
  * Webshare-前置 is 香港-自动, 日本-自动, then DIRECT. Same order as the gateway.
  *
@@ -24,6 +26,7 @@ const AGNES_STATIC_PROXY_NAME = "Webshare-Private";
 const AGNES_WEBSHARE_DIALER_GROUP = "Webshare-前置";
 
 const AGNES_URLS = {
+  antigravity: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/Antigravity.list?v=1",
   gemini: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/Gemini.list?v=1",
   openai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/OpenAI.list?v=1",
   google_mobile: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/GoogleMobile.list",
@@ -113,9 +116,11 @@ async function main(config = {}) {
   const groups = [
     agnesSelect(AGNES_WEBSHARE_DIALER_GROUP, ["香港-自动", "日本-自动", "DIRECT"]),
     agnesSelect("Gemini", [AGNES_STATIC_PROXY_NAME, "Gemini-手动", "DIRECT"]),
+    agnesSelect("Antigravity", [AGNES_STATIC_PROXY_NAME, "Antigravity-手动", "DIRECT"]),
     agnesSelect("OpenAI", [AGNES_STATIC_PROXY_NAME, "OpenAI-手动", "DIRECT"]),
     agnesSelect("谷歌服务", [AGNES_STATIC_PROXY_NAME, "谷歌服务-手动", "DIRECT"]),
     agnesSelect("Gemini-手动", manualNames),
+    agnesSelect("Antigravity-手动", manualNames),
     agnesSelect("OpenAI-手动", manualNames),
     agnesSelect("谷歌服务-手动", manualNames),
     agnesUrlTest("香港-自动", matchRegular(/香港/)),
@@ -123,6 +128,7 @@ async function main(config = {}) {
   ];
 
   const ruleProviders = {
+    antigravity: agnesRuleProvider("antigravity", "classical"),
     gemini: agnesRuleProvider("gemini", "classical"),
     openai: agnesRuleProvider("openai", "classical"),
     google_mobile: agnesRuleProvider("google_mobile", "classical"),
@@ -181,6 +187,7 @@ async function main(config = {}) {
     "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve",
     "IP-CIDR6,fc00::/7,DIRECT,no-resolve",
     "IP-CIDR6,fe80::/10,DIRECT,no-resolve",
+    "RULE-SET,antigravity,Antigravity",
     "RULE-SET,gemini,Gemini",
     "RULE-SET,openai,OpenAI",
     "RULE-SET,google_mobile,谷歌服务",
