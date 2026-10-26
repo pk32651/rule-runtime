@@ -24,6 +24,10 @@ const AGNES_TEST_TIMEOUT = 5000;
 const AGNES_TEST_TOLERANCE = 150;
 const AGNES_STATIC_PROXY_NAME = "Webshare-Private";
 const AGNES_WEBSHARE_DIALER_GROUP = "Webshare-前置";
+// [主] 是一年期 v2-1Y，[备] 是可替换的第二条。标记由 Sub-Store 打上。
+const AGNES_PRIMARY_MARK = "[主]";
+const AGNES_BACKUP_MARK = "[备]";
+const AGNES_INFO_NODE = /到期|流量|获取|重置|套餐|剩余|官网|导航/;
 
 const AGNES_URLS = {
   antigravity: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/Antigravity.list?v=1",
@@ -55,6 +59,20 @@ function agnesUrlTest(name, proxies) {
     interval: AGNES_TEST_INTERVAL,
     timeout: AGNES_TEST_TIMEOUT,
     tolerance: AGNES_TEST_TOLERANCE,
+    lazy: true,
+  };
+}
+
+function agnesFallback(name, proxies) {
+  const choices = agnesUnique(proxies);
+  if (!choices.length) return agnesSelect(name, ["REJECT"]);
+  return {
+    name,
+    type: "fallback",
+    proxies: choices,
+    url: AGNES_TEST_URL,
+    interval: AGNES_TEST_INTERVAL,
+    timeout: AGNES_TEST_TIMEOUT,
     lazy: true,
   };
 }
@@ -104,14 +122,37 @@ async function main(config = {}) {
   staticProxies[0]["dialer-proxy"] = AGNES_WEBSHARE_DIALER_GROUP;
 
   const regularProxies = proxies.filter((proxy) => proxy.name !== AGNES_STATIC_PROXY_NAME);
-  const matchRegular = (pattern) =>
-    regularProxies
-      .filter((proxy) => !/游戏/.test(proxy.name) && pattern.test(proxy.name))
+  const laneOf = (proxy) => {
+    if (proxy.name.startsWith(AGNES_PRIMARY_MARK)) return "primary";
+    if (proxy.name.startsWith(AGNES_BACKUP_MARK)) return "backup";
+    return "";
+  };
+  const usable = regularProxies.filter(
+    (proxy) => laneOf(proxy) && !AGNES_INFO_NODE.test(proxy.name) && !/游戏/.test(proxy.name),
+  );
+  const namesOf = (lane, pattern) =>
+    usable
+      .filter((proxy) => laneOf(proxy) === lane && (!pattern || pattern.test(proxy.name)))
       .map((proxy) => proxy.name);
-
-  const manualNames = regularProxies
-    .filter((proxy) => !/游戏/.test(proxy.name))
-    .map((proxy) => proxy.name);
+  const addAuto = (label, pattern) => {
+    const created = [];
+    const members = [];
+    const primary = namesOf("primary", pattern);
+    const backup = namesOf("backup", pattern);
+    if (primary.length) {
+      created.push(agnesUrlTest(`${label}-主`, primary));
+      members.push(`${label}-主`);
+    }
+    if (backup.length) {
+      created.push(agnesUrlTest(`${label}-备`, backup));
+      members.push(`${label}-备`);
+    }
+    created.push(
+      members.length ? agnesFallback(`${label}-自动`, members) : agnesSelect(`${label}-自动`, ["REJECT"]),
+    );
+    return created;
+  };
+  const manualNames = [...namesOf("primary", null), ...namesOf("backup", null)];
 
   const groups = [
     agnesSelect(AGNES_WEBSHARE_DIALER_GROUP, ["香港-自动", "日本-自动", "DIRECT"]),
@@ -123,8 +164,8 @@ async function main(config = {}) {
     agnesSelect("Antigravity-手动", manualNames),
     agnesSelect("OpenAI-手动", manualNames),
     agnesSelect("谷歌服务-手动", manualNames),
-    agnesUrlTest("香港-自动", matchRegular(/香港/)),
-    agnesUrlTest("日本-自动", matchRegular(/日本/)),
+    ...addAuto("香港", /香港/),
+    ...addAuto("日本", /日本/),
   ];
 
   const ruleProviders = {

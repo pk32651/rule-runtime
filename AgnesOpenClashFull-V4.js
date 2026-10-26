@@ -22,6 +22,12 @@ const AGNES_TEST_TOLERANCE = 150;
 const AGNES_STATIC_PROXY_NAME = "Webshare-Private";
 const AGNES_WEBSHARE_DIALER_GROUP = "Webshare-前置";
 const AGNES_TARGET_SPOOF_IP = "10.10.10.6";
+// Sub-Store 在订阅上打标记，脚本不认机场名字。
+// [主] 只给一年期 v2-1Y。这份订阅不能更换，线路规格更高，始终先用。
+// [备] 是可替换的第二条。换订阅时仍打 [备]。整组 [主] 不可用时才转到 [备]。
+const AGNES_PRIMARY_MARK = "[主]";
+const AGNES_BACKUP_MARK = "[备]";
+const AGNES_INFO_NODE = /到期|流量|获取|重置|套餐|剩余|官网|导航/;
 
 const AGNES_URLS = {
   adobe: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Adobe/Adobe.list",
@@ -82,6 +88,23 @@ function agnesUrlTest(name, proxies) {
     timeout: AGNES_TEST_TIMEOUT,
     tolerance: AGNES_TEST_TOLERANCE,
     lazy: true,
+    // OpenClash 运行时把测速地址改成 Apple success.html，返回 200。
+    "expected-status": 200,
+  };
+}
+
+function agnesFallback(name, proxies) {
+  const choices = agnesUnique(proxies);
+  if (!choices.length) return agnesSelect(name, ["REJECT"]);
+  return {
+    name,
+    type: "fallback",
+    proxies: choices,
+    url: AGNES_TEST_URL,
+    interval: AGNES_TEST_INTERVAL,
+    timeout: AGNES_TEST_TIMEOUT,
+    lazy: true,
+    "expected-status": 200,
   };
 }
 
@@ -146,29 +169,59 @@ async function main(config = {}) {
   const regularProxies = proxies.filter(
     (proxy) => proxy.name !== AGNES_STATIC_PROXY_NAME,
   );
-  const regularNames = regularProxies.map((proxy) => proxy.name);
-  const nonGameNames = regularProxies
-    .filter((proxy) => !/游戏/.test(proxy.name))
-    .map((proxy) => proxy.name);
-  const gameNames = regularProxies
-    .filter((proxy) => /游戏/.test(proxy.name))
-    .map((proxy) => proxy.name);
-  const matchRegular = (pattern) =>
-    regularProxies
-      .filter((proxy) => !/游戏/.test(proxy.name) && pattern.test(proxy.name))
+  const laneOf = (proxy) => {
+    if (proxy.name.startsWith(AGNES_PRIMARY_MARK)) return "primary";
+    if (proxy.name.startsWith(AGNES_BACKUP_MARK)) return "backup";
+    return "";
+  };
+  const usable = regularProxies.filter(
+    (proxy) => laneOf(proxy) && !AGNES_INFO_NODE.test(proxy.name),
+  );
+  const namesOf = (lane, pattern, game) =>
+    usable
+      .filter((proxy) => laneOf(proxy) === lane)
+      .filter((proxy) => (game ? /游戏/.test(proxy.name) : !/游戏/.test(proxy.name)))
+      .filter((proxy) => !pattern || pattern.test(proxy.name))
       .map((proxy) => proxy.name);
-
-  const hongKong = matchRegular(/香港/);
-  const taiwan = matchRegular(/台湾/);
-  const japan = matchRegular(/日本/);
-  const singapore = matchRegular(/新加坡/);
-  const korea = matchRegular(/韩国/);
-  const unitedStates = matchRegular(/美国/);
-  const hkTwJpSgKr = matchRegular(/香港|台湾|日本|新加坡|韩国/);
-  const twJpSgKr = matchRegular(/台湾|日本|新加坡|韩国/);
-  const otherRegions = matchRegular(
+  const orderedNames = (pattern, game = false) => [
+    ...namesOf("primary", pattern, game),
+    ...namesOf("backup", pattern, game),
+  ];
+  const regionGroups = [];
+  const addAuto = (label, pattern, game = false) => {
+    const members = [];
+    const primary = namesOf("primary", pattern, game);
+    const backup = namesOf("backup", pattern, game);
+    if (primary.length) {
+      regionGroups.push(agnesUrlTest(`${label}-主`, primary));
+      members.push(`${label}-主`);
+    }
+    if (backup.length) {
+      regionGroups.push(agnesUrlTest(`${label}-备`, backup));
+      members.push(`${label}-备`);
+    }
+    regionGroups.push(
+      members.length
+        ? agnesFallback(`${label}-自动`, members)
+        : agnesSelect(`${label}-自动`, ["REJECT"]),
+    );
+    return orderedNames(pattern, game);
+  };
+  const hongKong = addAuto("香港", /香港/);
+  const taiwan = addAuto("台湾", /台湾/);
+  addAuto("日本", /日本/);
+  addAuto("新加坡", /新加坡|狮城/);
+  addAuto("韩国", /韩国/);
+  addAuto("美国", /美国/);
+  addAuto("港台日新韩", /香港|台湾|日本|新加坡|狮城|韩国/);
+  addAuto("台日新韩", /台湾|日本|新加坡|狮城|韩国/);
+  addAuto(
+    "其他",
     /英国|德国|南非|意大利|法国|加拿大|墨西哥|印度|越南|俄罗斯|澳大利亚|瑞士|瑞典|智利|荷兰|哥伦比亚|巴西|沙特|西班牙|泰国|土耳其|马来西亚|印度尼西亚|菲律宾/,
   );
+  const gameNames = addAuto("游戏", null, true);
+  addAuto("所有", null);
+  const manualNames = orderedNames(null, false);
 
   const groups = [];
   groups.push(
@@ -429,22 +482,12 @@ async function main(config = {}) {
   ]);
 
   groups.push(
-    agnesUrlTest("所有-自动", nonGameNames),
-    agnesSelect("所有-手动", nonGameNames),
-    agnesUrlTest("港台日新韩-自动", hkTwJpSgKr),
-    agnesUrlTest("台日新韩-自动", twJpSgKr),
-    agnesUrlTest("香港-自动", hongKong),
+    ...regionGroups,
+    agnesSelect("所有-手动", manualNames),
     agnesSelect("香港-手动", hongKong),
-    agnesUrlTest("台湾-自动", taiwan),
     agnesSelect("台湾-手动", taiwan),
-    agnesUrlTest("日本-自动", japan),
-    agnesUrlTest("新加坡-自动", singapore),
-    agnesUrlTest("韩国-自动", korea),
-    agnesUrlTest("美国-自动", unitedStates),
-    agnesUrlTest("其他-自动", otherRegions),
-    agnesUrlTest("游戏-自动", gameNames),
     agnesSelect("游戏-手动", gameNames),
-    agnesSelect("🐸 手动切换", regularNames),
+    agnesSelect("🐸 手动切换", manualNames),
   );
 
   const ruleProviders = {};
