@@ -88,8 +88,6 @@ function agnesUrlTest(name, proxies) {
     timeout: AGNES_TEST_TIMEOUT,
     tolerance: AGNES_TEST_TOLERANCE,
     lazy: true,
-    // OpenClash 运行时把测速地址改成 Apple success.html，返回 200。
-    "expected-status": 200,
   };
 }
 
@@ -104,7 +102,6 @@ function agnesFallback(name, proxies) {
     interval: AGNES_TEST_INTERVAL,
     timeout: AGNES_TEST_TIMEOUT,
     lazy: true,
-    "expected-status": 200,
   };
 }
 
