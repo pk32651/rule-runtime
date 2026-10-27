@@ -45,7 +45,6 @@ const AGNES_URLS = {
   steam_cn: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/steam@cn.mrs",
   xunlei: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Xunlei/Xunlei.list",
   baidu_cloud: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Cloud/BaiduCloud/BaiduCloud.list",
-  acl4ssr_download: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Download.list",
   tiktok: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/TikTok/TikTok.list",
   telegram: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Telegram/Telegram.list",
   spotify: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Spotify/Spotify.list",
@@ -56,7 +55,6 @@ const AGNES_URLS = {
   ea: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/ea.mrs",
   github: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/github.mrs",
   agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=6",
-  global: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Global/Global.list",
   foreign_extra: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ForeignExtra.list",
   cncidr: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/cn.mrs",
   apple_cn: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/apple-cn.mrs",
@@ -292,7 +290,6 @@ async function main(config = {}) {
     "REJECT",
   ]);
   addBusinessGroup("📱 Google移动服务", [
-    "📀 流媒体",
     "⚡ 日常高速",
     "香港-自动",
     "香港-手动",
@@ -509,8 +506,59 @@ async function main(config = {}) {
   config.proxies = proxies;
   config["proxy-groups"] = groups;
   config["rule-providers"] = ruleProviders;
+  config["sub-rules"] = {
+    "spoof-10-6": [
+      // (1) ????/??/??/?? HTTPDNS??????? DNS ?? AAAA IPv6 ??????? IP
+      "DOMAIN-SUFFIX,bdurl.net,REJECT",
+      "DOMAIN,httpdns.volcengineapi.com,REJECT",
+      "DOMAIN,httpdns.alicdn.com,REJECT",
+      "DOMAIN,httpdns.baidubce.com,REJECT",
+      "IP-CIDR,203.107.1.0/24,REJECT,no-resolve",
+      "IP-CIDR,182.254.116.0/24,REJECT,no-resolve",
+
+      // (2) ????????/?? CDN ???????????????????
+      "DOMAIN-KEYWORD,webcast,➡️ 国内",
+      "DOMAIN-SUFFIX,live.douyin.com,➡️ 国内",
+      "DOMAIN-SUFFIX,douyinvod.com,➡️ 国内",
+      "DOMAIN-SUFFIX,douyincdn.com,➡️ 国内",
+      "DOMAIN-SUFFIX,douyinpic.com,➡️ 国内",
+      "DOMAIN-SUFFIX,douyinstatic.com,➡️ 国内",
+      "DOMAIN-SUFFIX,byteimg.com,➡️ 国内",
+      "DOMAIN-SUFFIX,pstatp.com,➡️ 国内",
+      "DOMAIN-SUFFIX,ibytedtos.com,➡️ 国内",
+      "DOMAIN-SUFFIX,xdrtc.com,➡️ 国内",
+      "DOMAIN-SUFFIX,ndcpp.com,➡️ 国内",
+
+      // (3) ????? CDN???????????????????
+      "DOMAIN-SUFFIX,xhscdn.com,➡️ 国内",
+      "DOMAIN-SUFFIX,xhscdn.net,➡️ 国内",
+      "DOMAIN-SUFFIX,xhsrcdn.com,➡️ 国内",
+      "DOMAIN-SUFFIX,rednotecdn.com,➡️ 国内",
+      "DOMAIN-SUFFIX,live.xiaohongshu.com,➡️ 国内",
+      "DOMAIN-SUFFIX,live-play.xiaohongshu.com,➡️ 国内",
+      "DOMAIN-SUFFIX,live-push.xiaohongshu.com,➡️ 国内",
+      "DOMAIN-SUFFIX,picasso.xiaohongshu.com,➡️ 国内",
+      "DOMAIN-SUFFIX,res.xiaohongshu.com,➡️ 国内",
+      "DOMAIN-SUFFIX,static.xiaohongshu.com,➡️ 国内",
+
+      // (4) ????????? QUIC (UDP 443)????? TCP TLS 443 ??? SNI ?? 100% ??
+      "AND,((NETWORK,udp),(DST-PORT,443),(OR,((DOMAIN-SUFFIX,snssdk.com),(DOMAIN-SUFFIX,aweme.com),(DOMAIN-SUFFIX,amemv.com),(DOMAIN-SUFFIX,zijieapi.com),(DOMAIN-SUFFIX,douyin.com),(DOMAIN-SUFFIX,edith.xiaohongshu.com),(DOMAIN-SUFFIX,xiaohongshu.com),(DOMAIN-SUFFIX,xhslink.com),(DOMAIN-SUFFIX,fengkongcloud.com),(DOMAIN-SUFFIX,rednote.com)))),REJECT",
+
+      // (5) ????????????????????????????????????
+      "DOMAIN-SUFFIX,snssdk.com,📍 社交定位",
+      "DOMAIN-SUFFIX,aweme.com,📍 社交定位",
+      "DOMAIN-SUFFIX,amemv.com,📍 社交定位",
+      "DOMAIN-SUFFIX,zijieapi.com,📍 社交定位",
+      "DOMAIN-SUFFIX,douyin.com,📍 社交定位",
+      "DOMAIN-SUFFIX,edith.xiaohongshu.com,📍 社交定位",
+      "DOMAIN-SUFFIX,xiaohongshu.com,📍 社交定位",
+      "DOMAIN-SUFFIX,xhslink.com,📍 社交定位",
+      "DOMAIN-SUFFIX,fengkongcloud.com,📍 社交定位",
+      "DOMAIN-SUFFIX,rednote.com,📍 社交定位",
+    ],
+  };
   config.rules = [
-    // 1. 本地回环与内网私有地址（最高优先级）
+    // 1. ??????????????????
     "IP-CIDR,127.0.0.0/8,REJECT,no-resolve",
     "IP-CIDR6,::1/128,REJECT,no-resolve",
     "IP-CIDR,192.168.0.0/16,➡️ 国内,no-resolve",
@@ -522,91 +570,55 @@ async function main(config = {}) {
     "RULE-SET,adobe_activation,💧 RJ",
     "RULE-SET,lan,➡️ 国内",
 
-    // 单设备专属（10.10.10.6）：抖音 & 小红书定向漏斗规则
-    // 【上半部：直播与音视频媒体 强制直连（第一优先级，提前截胡）】
-    // --- 抖音直连 ---
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-KEYWORD,webcast)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,live.douyin.com)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,douyinvod.com)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,douyincdn.com)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,douyinpic.com)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xdrtc.com)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,ndcpp.com)),➡️ 国内`,
+    // ??????10.10.10.6???? SUB-RULE O(1) ???? & ????????? .6 ?? 1 ???????
+    `SUB-RULE,(SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),spoof-10-6`,
 
-    // --- 小红书直连（媒体 CDN、短视频、超清图片与直播推拉流，零延迟秒开）---
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xhscdn.com)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xhscdn.net)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xhsrcdn.com)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,rednotecdn.com)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,live.xiaohongshu.com)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,live-play.xiaohongshu.com)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,live-push.xiaohongshu.com)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,picasso.xiaohongshu.com)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,res.xiaohongshu.com)),➡️ 国内`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,static.xiaohongshu.com)),➡️ 国内`,
-
-    // 【下半部：社交发评与账号信令（第二优先级，稳走香港定位）】
-    // --- 抖音定位 ---
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,snssdk.com)),📍 社交定位`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,aweme.com)),📍 社交定位`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,amemv.com)),📍 社交定位`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,zijieapi.com)),📍 社交定位`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,douyin.com)),📍 社交定位`,
-
-    // --- 小红书定位 ---
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,edith.xiaohongshu.com)),📍 社交定位`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xiaohongshu.com)),📍 社交定位`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,xhslink.com)),📍 社交定位`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,fengkongcloud.com)),📍 社交定位`,
-    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(DOMAIN-SUFFIX,rednote.com)),📍 社交定位`,
-
-    // 2. 自定义强制直连白名单（前置最高优先级保护，杜绝 snssdk.com 等国内业务被误杀）
+    // 2. ??????????????????????? snssdk.com ?????????
     "RULE-SET,agnes_direct,➡️ 国内",
 
-    // 3. 泄露测试与强特征专属海外核心服务
+    // 3. ????????????????
     "RULE-SET,leak_test,🌍 国外",
     "RULE-SET,account_safe,🔐 账号安全",
     "RULE-SET,agnes_ai,👽 AI",
-    // YouTube 整表跟账号走同一个固定出口，避免登录在 Webshare、播放在会跳的香港节点。
+    // YouTube ??????????????????? Webshare????????????
     "RULE-SET,youtube,🔐 账号安全",
-    // Google STUN (UDP 19302) 必须在 Google IP 规则集前拒绝，防止 WebRTC 借 Google CIDR 暴露香港日常出口 IPv4/IPv6
+    // Google STUN (UDP 19302) ??? Google IP ????????? WebRTC ? Google CIDR ???????? IPv4/IPv6
     "AND,((NETWORK,udp),(DST-PORT,19302)),REJECT",
     "RULE-SET,google_mobile,📱 Google移动服务",
     "RULE-SET,google_fcm,📱 Google移动服务",
     "RULE-SET,google,📱 Google移动服务",
 
-    // 4. 专属海外应用服务
+    // 4. ????????
     "RULE-SET,tiktok,👯‍♂️ TikTok",
     "RULE-SET,telegram,🙋 Telegram",
-    "RULE-SET,spotify,📀 音乐",
+    "RULE-SET,spotify,💿 音乐",
     "RULE-SET,github,📘 GitHub",
 
-    // 5. 国内大盘快速旁路（按小规模高频到全量大盘智能排序，瞬间命中直连并短路）
-    "RULE-SET,apple_cn,➡️ 国内",
-    "RULE-SET,china_direct,➡️ 国内",
-    "GEOSITE,cn,➡️ 国内",
-    "RULE-SET,cncidr,➡️ 国内,no-resolve",
-    "GEOIP,CN,➡️ 国内,no-resolve",
-
-    // 6. 下载流量与游戏分流
+    // 5. ?????????????? SteamCN/??/??/????????????????????? DIRECT?
     "RULE-SET,game_download,📥 下载流量",
     "RULE-SET,game_download_cn,📥 下载流量",
     "RULE-SET,steam_cn,📥 下载流量",
     "RULE-SET,xunlei,📥 下载流量",
     "RULE-SET,baidu_cloud,📥 下载流量",
-    "RULE-SET,acl4ssr_download,📥 下载流量",
     "GEOSITE,category-public-tracker,📥 下载流量",
+
+    // 6. ???????????????? .mrs ?????????????? GEOSITE,cn ?????
+    "RULE-SET,apple_cn,➡️ 国内",
+    "RULE-SET,china_direct,➡️ 国内",
+    "RULE-SET,cncidr,➡️ 国内,no-resolve",
+    "GEOIP,CN,➡️ 国内,no-resolve",
+
+    // 7. ???????????
     "RULE-SET,agnes_game,🎮 Game",
     "RULE-SET,steam,🎮 Game",
     "RULE-SET,rockstar,🎮 Game",
     "RULE-SET,blizzard,🎮 Game",
     "RULE-SET,ea,🎮 Game",
 
-    // 7. 海外兜底与 IPv6 安全保护
-    // 国内 STUN 已在上面的 GEOIP,CN 命中；国外 STUN (UDP 3478/5349，含 IPv4/IPv6) 在进入国外兜底与 IPv6 兜底前直接拒绝
+    // 8. ????? IPv6 ??????? 3.5 ?? classical ?? global?? foreign_extra + geolocation-!cn ???
+    // ?? STUN ????? GEOIP,CN ????? STUN (UDP 3478/5349?? IPv4/IPv6) ???????? IPv6 ???????
     "AND,((NETWORK,udp),(DST-PORT,3478)),REJECT",
     "AND,((NETWORK,udp),(DST-PORT,5349)),REJECT",
-    "RULE-SET,global,🌍 国外",
     "RULE-SET,foreign_extra,🌍 国外",
     "GEOSITE,geolocation-!cn,🌍 国外",
     "IP-CIDR6,::/0,🛡 IPv6兜底,no-resolve",
