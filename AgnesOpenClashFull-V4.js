@@ -506,57 +506,6 @@ async function main(config = {}) {
   config.proxies = proxies;
   config["proxy-groups"] = groups;
   config["rule-providers"] = ruleProviders;
-  config["sub-rules"] = {
-    "spoof-10-6": [
-      // (1) 阻断字节/阿里/百度/腾讯 HTTPDNS，防止绕过系统 DNS 获取 AAAA IPv6 或暴露国内真实 IP
-      "DOMAIN-SUFFIX,bdurl.net,REJECT",
-      "DOMAIN,httpdns.volcengineapi.com,REJECT",
-      "DOMAIN,httpdns.alicdn.com,REJECT",
-      "DOMAIN,httpdns.baidubce.com,REJECT",
-      "IP-CIDR,203.107.1.0/24,REJECT,no-resolve",
-      "IP-CIDR,182.254.116.0/24,REJECT,no-resolve",
-
-      // (2) 抖音直播与音视频/图片 CDN 强制直连（零延迟秒开，不消耗代理流量）
-      "DOMAIN-KEYWORD,webcast,➡️ 国内",
-      "DOMAIN-SUFFIX,live.douyin.com,➡️ 国内",
-      "DOMAIN-SUFFIX,douyinvod.com,➡️ 国内",
-      "DOMAIN-SUFFIX,douyincdn.com,➡️ 国内",
-      "DOMAIN-SUFFIX,douyinpic.com,➡️ 国内",
-      "DOMAIN-SUFFIX,douyinstatic.com,➡️ 国内",
-      "DOMAIN-SUFFIX,byteimg.com,➡️ 国内",
-      "DOMAIN-SUFFIX,pstatp.com,➡️ 国内",
-      "DOMAIN-SUFFIX,ibytedtos.com,➡️ 国内",
-      "DOMAIN-SUFFIX,xdrtc.com,➡️ 国内",
-      "DOMAIN-SUFFIX,ndcpp.com,➡️ 国内",
-
-      // (3) 小红书媒体 CDN、短视频、超清图片与直播推拉流强制直连
-      "DOMAIN-SUFFIX,xhscdn.com,➡️ 国内",
-      "DOMAIN-SUFFIX,xhscdn.net,➡️ 国内",
-      "DOMAIN-SUFFIX,xhsrcdn.com,➡️ 国内",
-      "DOMAIN-SUFFIX,rednotecdn.com,➡️ 国内",
-      "DOMAIN-SUFFIX,live.xiaohongshu.com,➡️ 国内",
-      "DOMAIN-SUFFIX,live-play.xiaohongshu.com,➡️ 国内",
-      "DOMAIN-SUFFIX,live-push.xiaohongshu.com,➡️ 国内",
-      "DOMAIN-SUFFIX,picasso.xiaohongshu.com,➡️ 国内",
-      "DOMAIN-SUFFIX,res.xiaohongshu.com,➡️ 国内",
-      "DOMAIN-SUFFIX,static.xiaohongshu.com,➡️ 国内",
-
-      // (4) 阻断社交定位信令的 QUIC (UDP 443)，逼退标准 TCP TLS 443 以确保 SNI 嗅探 100% 命中
-      "AND,((NETWORK,udp),(DST-PORT,443),(OR,((DOMAIN-SUFFIX,snssdk.com),(DOMAIN-SUFFIX,aweme.com),(DOMAIN-SUFFIX,amemv.com),(DOMAIN-SUFFIX,zijieapi.com),(DOMAIN-SUFFIX,douyin.com),(DOMAIN-SUFFIX,edith.xiaohongshu.com),(DOMAIN-SUFFIX,xiaohongshu.com),(DOMAIN-SUFFIX,xhslink.com),(DOMAIN-SUFFIX,fengkongcloud.com),(DOMAIN-SUFFIX,rednote.com)))),REJECT",
-
-      // (5) 社交发评与账号信令稳走香港定位（未命中本子规则的普通流量自动回退主规则）
-      "DOMAIN-SUFFIX,snssdk.com,📍 社交定位",
-      "DOMAIN-SUFFIX,aweme.com,📍 社交定位",
-      "DOMAIN-SUFFIX,amemv.com,📍 社交定位",
-      "DOMAIN-SUFFIX,zijieapi.com,📍 社交定位",
-      "DOMAIN-SUFFIX,douyin.com,📍 社交定位",
-      "DOMAIN-SUFFIX,edith.xiaohongshu.com,📍 社交定位",
-      "DOMAIN-SUFFIX,xiaohongshu.com,📍 社交定位",
-      "DOMAIN-SUFFIX,xhslink.com,📍 社交定位",
-      "DOMAIN-SUFFIX,fengkongcloud.com,📍 社交定位",
-      "DOMAIN-SUFFIX,rednote.com,📍 社交定位",
-    ],
-  };
   config.rules = [
     // 1. 本地回环与内网私有地址（最高优先级）
     "IP-CIDR,127.0.0.0/8,REJECT,no-resolve",
@@ -570,13 +519,7 @@ async function main(config = {}) {
     "RULE-SET,adobe_activation,💧 RJ",
     "RULE-SET,lan,➡️ 国内",
 
-    // 单设备专属（10.10.10.6）：通过 SUB-RULE O(1) 分流抖音 & 小红书定向漏斗，非 .6 设备 1 次判断直接跳过
-    `SUB-RULE,(SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),spoof-10-6`,
-
-    // 2. 自定义强制直连白名单（前置最高优先级保护，杜绝 snssdk.com 等国内业务被误杀）
-    "RULE-SET,agnes_direct,➡️ 国内",
-
-    // 3. 泄露测试与强特征专属海外核心服务
+    // 2. 泄露测试与账号安全 / AI 核心防风控（固定 Webshare-Private，优先于 10.10.10.6 以防止 AI/账号出口漂移）
     "RULE-SET,leak_test,🌍 国外",
     "RULE-SET,account_safe,🔐 账号安全",
     "RULE-SET,agnes_ai,👽 AI",
@@ -584,17 +527,23 @@ async function main(config = {}) {
     "RULE-SET,youtube,🔐 账号安全",
     // Google STUN (UDP 19302) 必须在 Google IP 规则集前拒绝，防止 WebRTC 借 Google CIDR 暴露香港日常出口 IPv4/IPv6
     "AND,((NETWORK,udp),(DST-PORT,19302)),REJECT",
+
+    // 3. 单设备专属（10.10.10.6）：保住内网与 AI/账号安全后，其余流量一行接管进入香港定位
+    `SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32,📍 社交定位`,
+
+    // 4. 自定义强制直连白名单（保护全屋其他设备的 snssdk.com 等国内业务不被海外规则误杀）
+    "RULE-SET,agnes_direct,➡️ 国内",
+
+    // 5. Google 与专属海外应用服务
     "RULE-SET,google_mobile,📱 Google移动服务",
     "RULE-SET,google_fcm,📱 Google移动服务",
     "RULE-SET,google,📱 Google移动服务",
-
-    // 4. 专属海外应用服务
     "RULE-SET,tiktok,👯‍♂️ TikTok",
     "RULE-SET,telegram,🙋 Telegram",
     "RULE-SET,spotify,📀 音乐",
     "RULE-SET,github,📘 GitHub",
 
-    // 5. 大流量下载（早于国内大盘，使 SteamCN/网盘/迅雷/海外游戏更新统一归入下载组观测与控制，默认 DIRECT）
+    // 6. 大流量下载（早于国内大盘，使 SteamCN/网盘/迅雷/海外游戏更新统一归入下载组观测与控制，默认 DIRECT）
     "RULE-SET,game_download,📥 下载流量",
     "RULE-SET,game_download_cn,📥 下载流量",
     "RULE-SET,steam_cn,📥 下载流量",
@@ -602,20 +551,20 @@ async function main(config = {}) {
     "RULE-SET,baidu_cloud,📥 下载流量",
     "GEOSITE,category-public-tracker,📥 下载流量",
 
-    // 6. 国内大盘快速旁路（采用每日更新的 .mrs 二进制基数树，去掉完全重复的 GEOSITE,cn 二次查询）
+    // 7. 国内大盘快速旁路（采用每日更新的 .mrs 二进制基数树，去掉完全重复的 GEOSITE,cn 二次查询）
     "RULE-SET,apple_cn,➡️ 国内",
     "RULE-SET,china_direct,➡️ 国内",
     "RULE-SET,cncidr,➡️ 国内,no-resolve",
     "GEOIP,CN,➡️ 国内,no-resolve",
 
-    // 7. 游戏平台联机与商店分流
+    // 8. 游戏平台联机与商店分流
     "RULE-SET,agnes_game,🎮 Game",
     "RULE-SET,steam,🎮 Game",
     "RULE-SET,rockstar,🎮 Game",
     "RULE-SET,blizzard,🎮 Game",
     "RULE-SET,ea,🎮 Game",
 
-    // 8. 海外兜底与 IPv6 安全保护（移除 3.5 万行 classical 明文 global，由 foreign_extra + geolocation-!cn 承载）
+    // 9. 海外兜底与 IPv6 安全保护（移除 3.5 万行 classical 明文 global，由 foreign_extra + geolocation-!cn 承载）
     // 国内 STUN 已在上面的 GEOIP,CN 命中；国外 STUN (UDP 3478/5349，含 IPv4/IPv6) 在进入国外兜底与 IPv6 兜底前直接拒绝
     "AND,((NETWORK,udp),(DST-PORT,3478)),REJECT",
     "AND,((NETWORK,udp),(DST-PORT,5349)),REJECT",
