@@ -15,10 +15,10 @@
  * 5. Dedicated policy group 【📍 社交定位】 for instant toggle (DIRECT) or region switching.
  */
 
-const AGNES_TEST_URL = "http://www.gstatic.com/generate_204";
-const AGNES_TEST_INTERVAL = 300;
+const AGNES_TEST_URL = "http://captive.apple.com/hotspot-detect.html";
+const AGNES_TEST_INTERVAL = 180;
 const AGNES_TEST_TIMEOUT = 5000;
-const AGNES_TEST_TOLERANCE = 150;
+const AGNES_TEST_TOLERANCE = 170;
 const AGNES_STATIC_PROXY_NAME = "Webshare-Private";
 const AGNES_WEBSHARE_DIALER_GROUP = "Webshare-前置";
 const AGNES_TARGET_SPOOF_IP = "10.10.10.6";
@@ -30,7 +30,7 @@ const AGNES_BACKUP_MARK = "[备]";
 const AGNES_INFO_NODE = /到期|流量|获取|重置|套餐|剩余|官网|导航/;
 
 const AGNES_URLS = {
-  adobe: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Adobe/Adobe.list",
+  adobe: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/adobe.mrs",
   adobe_activation: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/AdobeActivation/AdobeActivation.list",
   lan: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Lan/Lan.list",
   leak_test: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/LeakTest.list",
@@ -42,7 +42,7 @@ const AGNES_URLS = {
   google: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Google/Google.list",
   game_download: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Game/GameDownload/GameDownload.list",
   game_download_cn: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Game/GameDownloadCN/GameDownloadCN.list",
-  steam_cn: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/SteamCN/SteamCN.list",
+  steam_cn: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/steam@cn.mrs",
   xunlei: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Xunlei/Xunlei.list",
   baidu_cloud: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Cloud/BaiduCloud/BaiduCloud.list",
   acl4ssr_download: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Download.list",
@@ -51,16 +51,16 @@ const AGNES_URLS = {
   spotify: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Spotify/Spotify.list",
   agnes_game: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/Game.list",
   steam: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Steam/Steam.list",
-  rockstar: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Rockstar/Rockstar.list",
+  rockstar: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/rockstar.mrs",
   blizzard: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Blizzard/Blizzard.list",
-  ea: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/EA/EA.list",
-  github: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/GitHub/GitHub.list",
+  ea: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/ea.mrs",
+  github: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/github.mrs",
   agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=6",
   global: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Global/Global.list",
   foreign_extra: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ForeignExtra.list",
-  cncidr: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/cncidr.txt",
-  apple_cn: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/apple.txt",
-  china_direct: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/direct.txt",
+  cncidr: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/cn.mrs",
+  apple_cn: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/apple-cn.mrs",
+  china_direct: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/cn.mrs",
 };
 
 function agnesUnique(items) {
@@ -106,12 +106,14 @@ function agnesFallback(name, proxies) {
 }
 
 function agnesRuleProvider(name, behavior = "classical") {
+  const url = AGNES_URLS[name];
+  const isMrs = url.endsWith(".mrs");
   return {
     type: "http",
     behavior,
-    format: "text",
-    url: AGNES_URLS[name],
-    path: `./rule_provider/agnes_${name}.list`,
+    format: isMrs ? "mrs" : "text",
+    url,
+    path: `./rule_provider/agnes_${name}.${isMrs ? "mrs" : "list"}`,
     interval: 86400,
   };
 }
@@ -487,11 +489,20 @@ async function main(config = {}) {
     agnesSelect("🐸 手动切换", manualNames),
   );
 
+  const domainSets = new Set([
+    "apple_cn",
+    "china_direct",
+    "adobe",
+    "github",
+    "steam_cn",
+    "ea",
+    "rockstar",
+  ]);
   const ruleProviders = {};
   for (const name of Object.keys(AGNES_URLS)) {
     let behavior = "classical";
     if (name === "cncidr") behavior = "ipcidr";
-    else if (name === "apple_cn" || name === "china_direct") behavior = "domain";
+    else if (domainSets.has(name)) behavior = "domain";
     ruleProviders[name] = agnesRuleProvider(name, behavior);
   }
 
@@ -558,6 +569,8 @@ async function main(config = {}) {
     "RULE-SET,agnes_ai,👽 AI",
     // YouTube 整表跟账号走同一个固定出口，避免登录在 Webshare、播放在会跳的香港节点。
     "RULE-SET,youtube,🔐 账号安全",
+    // Google STUN (UDP 19302) 必须在 Google IP 规则集前拒绝，防止 WebRTC 借 Google CIDR 暴露香港日常出口 IPv4/IPv6
+    "AND,((NETWORK,udp),(DST-PORT,19302)),REJECT",
     "RULE-SET,google_mobile,📱 Google移动服务",
     "RULE-SET,google_fcm,📱 Google移动服务",
     "RULE-SET,google,📱 Google移动服务",
@@ -590,14 +603,13 @@ async function main(config = {}) {
     "RULE-SET,ea,🎮 Game",
 
     // 7. 海外兜底与 IPv6 安全保护
+    // 国内 STUN 已在上面的 GEOIP,CN 命中；国外 STUN (UDP 3478/5349，含 IPv4/IPv6) 在进入国外兜底与 IPv6 兜底前直接拒绝
+    "AND,((NETWORK,udp),(DST-PORT,3478)),REJECT",
+    "AND,((NETWORK,udp),(DST-PORT,5349)),REJECT",
     "RULE-SET,global,🌍 国外",
     "RULE-SET,foreign_extra,🌍 国外",
     "GEOSITE,geolocation-!cn,🌍 国外",
     "IP-CIDR6,::/0,🛡 IPv6兜底,no-resolve",
-    // 国内 STUN 已在上面的 GEOIP,CN 命中。国外这三个端口直接拒绝，不返回映射地址。
-    "AND,((NETWORK,udp),(DST-PORT,3478)),REJECT",
-    "AND,((NETWORK,udp),(DST-PORT,19302)),REJECT",
-    "AND,((NETWORK,udp),(DST-PORT,5349)),REJECT",
     "DST-PORT,80,🐟 未匹配流量",
     "DST-PORT,443,🐟 未匹配流量",
     "MATCH,DIRECT",

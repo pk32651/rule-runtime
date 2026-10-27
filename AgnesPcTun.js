@@ -18,10 +18,10 @@
  * and Tencent DoH backup. MosDNS on the gateway listens only on 127.0.0.1.
  */
 
-const AGNES_TEST_URL = "http://www.gstatic.com/generate_204";
-const AGNES_TEST_INTERVAL = 300;
+const AGNES_TEST_URL = "http://captive.apple.com/hotspot-detect.html";
+const AGNES_TEST_INTERVAL = 180;
 const AGNES_TEST_TIMEOUT = 5000;
-const AGNES_TEST_TOLERANCE = 150;
+const AGNES_TEST_TOLERANCE = 170;
 const AGNES_STATIC_PROXY_NAME = "Webshare-Private";
 const AGNES_WEBSHARE_DIALER_GROUP = "Webshare-前置";
 // [主] 是一年期 v2-1Y，[备] 是可替换的第二条。标记由 Sub-Store 打上。
@@ -36,7 +36,7 @@ const AGNES_URLS = {
   google_mobile: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/GoogleMobile.list",
   google_fcm: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/GoogleFCM/GoogleFCM.list",
   google: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Google/Google.list",
-  cncidr: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/cncidr.txt",
+  cncidr: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/cn.mrs",
 };
 
 function agnesUnique(items) {
@@ -78,12 +78,14 @@ function agnesFallback(name, proxies) {
 }
 
 function agnesRuleProvider(name, behavior) {
+  const url = AGNES_URLS[name];
+  const isMrs = url.endsWith(".mrs");
   return {
     type: "http",
     behavior,
-    format: "text",
-    url: AGNES_URLS[name],
-    path: `./rule_provider/pc_${name}.list`,
+    format: isMrs ? "mrs" : "text",
+    url,
+    path: `./rule_provider/pc_${name}.${isMrs ? "mrs" : "list"}`,
     interval: 86400,
   };
 }
