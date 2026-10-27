@@ -174,21 +174,21 @@ async function main(config = {}) {
   const usable = regularProxies.filter(
     (proxy) => laneOf(proxy) && !AGNES_INFO_NODE.test(proxy.name),
   );
-  const namesOf = (lane, pattern, game) =>
+  const namesOf = (lane, pattern) =>
     usable
       .filter((proxy) => laneOf(proxy) === lane)
-      .filter((proxy) => (game ? /游戏/.test(proxy.name) : !/游戏/.test(proxy.name)))
+      .filter((proxy) => !/游戏/.test(proxy.name))
       .filter((proxy) => !pattern || pattern.test(proxy.name))
       .map((proxy) => proxy.name);
-  const orderedNames = (pattern, game = false) => [
-    ...namesOf("primary", pattern, game),
-    ...namesOf("backup", pattern, game),
+  const orderedNames = (pattern) => [
+    ...namesOf("primary", pattern),
+    ...namesOf("backup", pattern),
   ];
   const regionGroups = [];
-  const addAuto = (label, pattern, game = false) => {
+  const addAuto = (label, pattern) => {
     const members = [];
-    const primary = namesOf("primary", pattern, game);
-    const backup = namesOf("backup", pattern, game);
+    const primary = namesOf("primary", pattern);
+    const backup = namesOf("backup", pattern);
     if (primary.length) {
       regionGroups.push(agnesUrlTest(`${label}-主`, primary));
       members.push(`${label}-主`);
@@ -202,10 +202,10 @@ async function main(config = {}) {
         ? agnesFallback(`${label}-自动`, members)
         : agnesSelect(`${label}-自动`, ["REJECT"]),
     );
-    return orderedNames(pattern, game);
+    return members;
   };
-  const hongKong = addAuto("香港", /香港/);
-  const taiwan = addAuto("台湾", /台湾/);
+  const hongKongAutoMembers = addAuto("香港", /香港/);
+  addAuto("台湾", /台湾/);
   addAuto("日本", /日本/);
   addAuto("新加坡", /新加坡|狮城/);
   addAuto("韩国", /韩国/);
@@ -216,9 +216,7 @@ async function main(config = {}) {
     "其他",
     /英国|德国|南非|意大利|法国|加拿大|墨西哥|印度|越南|俄罗斯|澳大利亚|瑞士|瑞典|智利|荷兰|哥伦比亚|巴西|沙特|西班牙|泰国|土耳其|马来西亚|印度尼西亚|菲律宾/,
   );
-  const gameNames = addAuto("游戏", null, true);
-  addAuto("所有", null);
-  const manualNames = orderedNames(null, false);
+  const manualNames = orderedNames(null);
 
   const groups = [];
   groups.push(
@@ -231,23 +229,8 @@ async function main(config = {}) {
 
   addStableGroup("🔐 账号安全", [
     "台湾-自动",
-    "台湾-手动",
-    "日本-自动",
-    "所有-自动",
-    "所有-手动",
-    "🐸 手动切换",
-    "DIRECT",
-    "REJECT",
-  ]);
-  addBusinessGroup("⚡ 日常高速", [
-    "香港-自动",
-    "香港-手动",
-    "所有-自动",
-    "所有-手动",
-    "台湾-自动",
     "日本-自动",
     "新加坡-自动",
-    "韩国-自动",
     "美国-自动",
     "🐸 手动切换",
     "DIRECT",
@@ -255,64 +238,38 @@ async function main(config = {}) {
   ]);
   addBusinessGroup("📥 下载流量", [
     "DIRECT",
-    "⚡ 日常高速",
     "香港-自动",
-    "所有-手动",
+    "港台日新韩-自动",
     "🐸 手动切换",
     "REJECT",
   ]);
-  groups.push(
-    agnesSelect("💧 RJ", [
-      "REJECT",
-      "DIRECT",
-      "所有-自动",
-      "所有-手动",
-      "香港-自动",
-      "台湾-自动",
-      "日本-自动",
-      "新加坡-自动",
-      "韩国-自动",
-      "美国-自动",
-      "其他-自动",
-    ]),
-  );
   addStableGroup("👽 AI", [
     "台湾-自动",
-    "台湾-手动",
     "日本-自动",
     "新加坡-自动",
     "韩国-自动",
     "美国-自动",
-    "所有-自动",
-    "所有-手动",
     "🐸 手动切换",
     "DIRECT",
     "REJECT",
   ]);
   addBusinessGroup("📱 Google移动服务", [
-    "⚡ 日常高速",
     "香港-自动",
-    "香港-手动",
     "台湾-自动",
-    "台湾-手动",
-    "所有-自动",
-    "所有-手动",
     "日本-自动",
     "新加坡-自动",
     "韩国-自动",
     "美国-自动",
+    "港台日新韩-自动",
     "🐸 手动切换",
     "DIRECT",
     "REJECT",
   ]);
   addBusinessGroup("📘 GitHub", [
-    "⚡ 日常高速",
+    "香港-自动",
     "DIRECT",
-    "所有-自动",
-    "所有-手动",
     "港台日新韩-自动",
     "台日新韩-自动",
-    "香港-自动",
     "台湾-自动",
     "日本-自动",
     "新加坡-自动",
@@ -328,54 +285,30 @@ async function main(config = {}) {
     "日本-自动",
     "新加坡-自动",
     "韩国-自动",
-    "⚡ 日常高速",
-    "所有-自动",
-    "所有-手动",
+    "香港-自动",
+    "美国-自动",
     "DIRECT",
     "REJECT",
     "🐸 手动切换",
   ]);
   addBusinessGroup("🙋 Telegram", [
-    "⚡ 日常高速",
-    "DIRECT",
-    "所有-自动",
-    "所有-手动",
-    "港台日新韩-自动",
     "香港-自动",
+    "港台日新韩-自动",
     "台湾-自动",
     "日本-自动",
     "新加坡-自动",
     "韩国-自动",
     "美国-自动",
     "其他-自动",
-    "REJECT",
-    "🐸 手动切换",
-  ]);
-  addBusinessGroup("📀 流媒体", [
-    "⚡ 日常高速",
     "DIRECT",
-    "所有-自动",
-    "所有-手动",
-    "港台日新韩-自动",
-    "台日新韩-自动",
-    "香港-自动",
-    "台湾-自动",
-    "日本-自动",
-    "新加坡-自动",
-    "韩国-自动",
-    "美国-自动",
-    "其他-自动",
     "REJECT",
     "🐸 手动切换",
   ]);
   addBusinessGroup("📀 音乐", [
-    "⚡ 日常高速",
+    "香港-自动",
     "DIRECT",
-    "所有-自动",
-    "所有-手动",
     "港台日新韩-自动",
     "台日新韩-自动",
-    "香港-自动",
     "台湾-自动",
     "日本-自动",
     "新加坡-自动",
@@ -386,13 +319,9 @@ async function main(config = {}) {
     "🐸 手动切换",
   ]);
   addBusinessGroup("🌍 国外", [
-    "⚡ 日常高速",
     "香港-自动",
-    "香港-手动",
+    ...hongKongAutoMembers,
     "台湾-自动",
-    "台湾-手动",
-    "所有-自动",
-    "所有-手动",
     "港台日新韩-自动",
     "台日新韩-自动",
     "日本-自动",
@@ -407,29 +336,24 @@ async function main(config = {}) {
   groups.push(
     agnesSelect("📍 社交定位", [
       "香港-自动",
+      ...hongKongAutoMembers,
       "DIRECT",
       "台湾-自动",
       "日本-自动",
       "新加坡-自动",
-      "所有-自动",
       "🐸 手动切换",
     ]),
   );
 
   groups.push(
-    agnesSelect("🛡 IPv6兜底", ["香港-自动", "所有-自动", "REJECT"]),
+    agnesSelect("🛡 IPv6兜底", ["香港-自动", "港台日新韩-自动", "REJECT"]),
   );
   groups.push(
     agnesSelect("🎮 Game", [
-      "⚡ 日常高速",
-      "游戏-自动",
-      "游戏-手动",
+      "香港-自动",
       "DIRECT",
-      "所有-自动",
-      "所有-手动",
       "港台日新韩-自动",
       "台日新韩-自动",
-      "香港-自动",
       "台湾-自动",
       "日本-自动",
       "新加坡-自动",
@@ -443,11 +367,9 @@ async function main(config = {}) {
   groups.push(
     agnesSelect("➡️ 国内", [
       "DIRECT",
-      "所有-自动",
-      "所有-手动",
+      "香港-自动",
       "港台日新韩-自动",
       "台日新韩-自动",
-      "香港-自动",
       "台湾-自动",
       "日本-自动",
       "新加坡-自动",
@@ -461,13 +383,9 @@ async function main(config = {}) {
   addBusinessGroup("🐟 未匹配流量", [
     "DIRECT",
     "🌍 国外",
-    "⚡ 日常高速",
-    "所有-自动",
-    "所有-手动",
     "香港-自动",
-    "香港-手动",
+    ...hongKongAutoMembers,
     "台湾-自动",
-    "台湾-手动",
     "日本-自动",
     "新加坡-自动",
     "韩国-自动",
@@ -479,10 +397,6 @@ async function main(config = {}) {
 
   groups.push(
     ...regionGroups,
-    agnesSelect("所有-手动", manualNames),
-    agnesSelect("香港-手动", hongKong),
-    agnesSelect("台湾-手动", taiwan),
-    agnesSelect("游戏-手动", gameNames),
     agnesSelect("🐸 手动切换", manualNames),
   );
 
@@ -515,8 +429,8 @@ async function main(config = {}) {
     "IP-CIDR,172.16.0.0/12,➡️ 国内,no-resolve",
     "IP-CIDR6,fc00::/7,➡️ 国内,no-resolve",
     "IP-CIDR6,fe80::/10,➡️ 国内,no-resolve",
-    "RULE-SET,adobe,💧 RJ",
-    "RULE-SET,adobe_activation,💧 RJ",
+    "RULE-SET,adobe,REJECT",
+    "RULE-SET,adobe_activation,REJECT",
     "RULE-SET,lan,➡️ 国内",
 
     // 2. 泄露测试与账号安全 / AI 核心防风控（固定 Webshare-Private，优先于 10.10.10.6 以防止 AI/账号出口漂移）
