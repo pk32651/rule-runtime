@@ -5,3 +5,15 @@ DOMAIN,myaccount.google.com
 DOMAIN,accounts.youtube.com
 DOMAIN,oauth2.googleapis.com
 DOMAIN,securetoken.googleapis.com
+DOMAIN-SUFFIX,instagram.com
+DOMAIN-SUFFIX,cdninstagram.com
+DOMAIN-SUFFIX,ig.me
+DOMAIN-SUFFIX,facebook.com
+DOMAIN-SUFFIX,fb.com
+DOMAIN-SUFFIX,fb.me
+DOMAIN-SUFFIX,fbcdn.net
+DOMAIN-SUFFIX,fbsbx.com
+DOMAIN-SUFFIX,messenger.com
+DOMAIN-SUFFIX,m.me
+DOMAIN-SUFFIX,threads.net
+DOMAIN-SUFFIX,threads.com
