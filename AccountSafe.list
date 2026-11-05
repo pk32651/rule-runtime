@@ -1,10 +1,16 @@
 DOMAIN,studio.youtube.com
 DOMAIN,upload.youtube.com
+DOMAIN,google.com
+DOMAIN,www.google.com
 DOMAIN,accounts.google.com
 DOMAIN,myaccount.google.com
 DOMAIN,accounts.youtube.com
 DOMAIN,oauth2.googleapis.com
 DOMAIN,securetoken.googleapis.com
+DOMAIN,oauthaccountmanager.googleapis.com
+DOMAIN,securitydomain-pa.googleapis.com
+DOMAIN,geller-pa.googleapis.com
+DOMAIN,accountsettings-pa.googleapis.com
 DOMAIN-SUFFIX,instagram.com
 DOMAIN-SUFFIX,cdninstagram.com
 DOMAIN-SUFFIX,ig.me
