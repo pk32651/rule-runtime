@@ -9,7 +9,10 @@
  *
  * V5 Improvements (Pure IPv4 Architecture, frozen V4 preserved as IPv6/IPv4 dual-stack history):
  * 1. Pure IPv4 rule tree: removes `🛡 IPv6兜底` policy group and redundant `IP-CIDR6` rules (`::1/128`, `fc00::/7`, `fe80::/10`), keeping a single `IP-CIDR6,::/0,REJECT,no-resolve` safety fuse at the bottom.
- * 2. Unified Google Login & Main Search (`AccountSafe.list?v=6`): keeps Google main search (`google.com` / `www.google.com`) and iOS OAuth / security endpoints (`oauthaccountmanager`, `securitydomain-pa`, `geller-pa`, `accountsettings-pa`) inside `🔐 账号安全` (`Webshare-Private`) so iOS/Safari sessions never split across shared airport nodes.
+ * 2. Clean 3-way boundary (`AccountSafe.list?v=7` / `AI.list?v=10`):
+ *    - `🔐 账号安全`: strictly for creator / social media platforms (YouTube, X/Twitter, Instagram, Facebook/Threads) pinned to `Webshare-Private`.
+ *    - `👽 AI`: strictly for AI & Google AI services (Gemini, AI Studio, NotebookLM, Antigravity, OpenAI, Claude, Grok).
+ *    - `📱 Google移动服务`: all general Google services (Search, Google Account login, Gmail, Play, FCM).
  * 3. Single-device fine-grained location routing for 10.10.10.6 (`SRC-IP-CIDR,10.10.10.6/32,📍 社交定位`) after AI / AccountSafe.
  */
 
@@ -32,8 +35,8 @@ const AGNES_URLS = {
   adobe_activation: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/AdobeActivation/AdobeActivation.list",
   lan: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Lan/Lan.list",
   leak_test: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/LeakTest.list",
-  account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=6",
-  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=9",
+  account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=7",
+  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=10",
   youtube: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTube/YouTube.list",
   google_mobile: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/GoogleMobile.list",
   google_fcm: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/GoogleFCM/GoogleFCM.list",
