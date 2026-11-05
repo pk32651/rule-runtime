@@ -10,7 +10,7 @@
  * V5 Improvements (Pure IPv4 Architecture, frozen V4 preserved as IPv6/IPv4 dual-stack history):
  * 1. Pure IPv4 rule tree: removes `🛡 IPv6兜底` policy group and redundant `IP-CIDR6` rules (`::1/128`, `fc00::/7`, `fe80::/10`), keeping a single `IP-CIDR6,::/0,REJECT,no-resolve` safety fuse at the bottom.
  * 2. Clean 3-way boundary (`AccountSafe.list?v=7` / `AI.list?v=10`):
- *    - `🔐 账号安全`: strictly for creator / social media platforms (YouTube, X/Twitter, Instagram, Facebook/Threads) pinned to `Webshare-Private`.
+ *    - `🔐 自媒体上传`: strictly for creator / social media publishing platforms (YouTube, X/Twitter, Instagram, Facebook/Threads) pinned to `Webshare-Private`.
  *    - `👽 AI`: strictly for AI & Google AI services (Gemini, AI Studio, NotebookLM, Antigravity, OpenAI, Claude, Grok).
  *    - `📱 Google移动服务`: all general Google services (Search, Google Account login, Gmail, Play, FCM).
  * 3. Single-device fine-grained location routing for 10.10.10.6 (`SRC-IP-CIDR,10.10.10.6/32,📍 社交定位`) after AI / AccountSafe.
@@ -228,7 +228,7 @@ async function main(config = {}) {
   const addStableGroup = (name, choices) =>
     groups.push(agnesSelect(name, agnesPrependStatic(choices, staticNames)));
 
-  addStableGroup("🔐 账号安全", [
+  addStableGroup("🔐 自媒体上传", [
     "台湾-自动",
     "日本-自动",
     "新加坡-自动",
@@ -428,12 +428,12 @@ async function main(config = {}) {
     "RULE-SET,adobe_activation,REJECT",
     "RULE-SET,lan,➡️ 国内",
 
-    // 2. 泄露测试与账号安全 / AI 核心防风控（固定 Webshare-Private，优先于 10.10.10.6 以防止 AI/账号出口漂移）
+    // 2. 泄露测试与自媒体上传 / AI 核心防风控（固定 Webshare-Private，优先于 10.10.10.6 以防止 AI/自媒体出口漂移）
     "RULE-SET,leak_test,🌍 国外",
-    "RULE-SET,account_safe,🔐 账号安全",
+    "RULE-SET,account_safe,🔐 自媒体上传",
     "RULE-SET,agnes_ai,👽 AI",
-    // YouTube 整表跟账号走同一个固定出口，避免登录在 Webshare、播放在会跳的香港节点。
-    "RULE-SET,youtube,🔐 账号安全",
+    // YouTube 整表跟自媒体后台走同一个固定出口，避免上传在 Webshare、播放在会跳的香港节点。
+    "RULE-SET,youtube,🔐 自媒体上传",
     // Google STUN (UDP 19302) 必须在 Google IP 规则集前拒绝，防止 WebRTC 借 Google CIDR 暴露日常出口
     "AND,((NETWORK,udp),(DST-PORT,19302)),REJECT",
 
