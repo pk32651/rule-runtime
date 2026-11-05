@@ -9,8 +9,8 @@
  *
  * V5 Improvements (Pure IPv4 Architecture, frozen V4 preserved as IPv6/IPv4 dual-stack history):
  * 1. Pure IPv4 rule tree: removes `🛡 IPv6兜底` policy group and redundant `IP-CIDR6` rules (`::1/128`, `fc00::/7`, `fe80::/10`), keeping a single `IP-CIDR6,::/0,REJECT,no-resolve` safety fuse at the bottom.
- * 2. Clean 3-way boundary (`AccountSafe.list?v=7` / `AI.list?v=10`):
- *    - `🔐 自媒体上传`: strictly for creator / social media publishing platforms (YouTube, X/Twitter, Instagram, Facebook/Threads) pinned to `Webshare-Private`.
+ * 2. Clean 3-way boundary + Plan A Single-PC Self-Media & CDN Split (`AccountSafe.list?v=8` / `AI.list?v=10`):
+ *    - `🔐 自媒体上传`: ONLY matches creator workstation `10.10.10.80` (`AND,((SRC-IP-CIDR,10.10.10.80/32),(RULE-SET,account_safe))`) for self-media main sites, Studio, APIs, and upload endpoints (YouTube, X/Twitter, Instagram, Facebook/Threads) pinned to `Webshare-Private`. Media stream CDNs (`googlevideo.com`, `ytimg.com`, `twimg.com`, `cdninstagram.com`, `fbcdn.net`) and all other household devices bypass `Webshare-Private` and use fast airport nodes (`🌍 国外`).
  *    - `👽 AI`: strictly for AI & Google AI services (Gemini, AI Studio, NotebookLM, Antigravity, OpenAI, Claude, Grok).
  *    - `📱 Google移动服务`: all general Google services (Search, Google Account login, Gmail, Play, FCM).
  * 3. Single-device fine-grained location routing for 10.10.10.6 (`SRC-IP-CIDR,10.10.10.6/32,📍 社交定位`) after AI / AccountSafe.
@@ -22,6 +22,7 @@ const AGNES_TEST_TIMEOUT = 5000;
 const AGNES_TEST_TOLERANCE = 170;
 const AGNES_STATIC_PROXY_NAME = "Webshare-Private";
 const AGNES_WEBSHARE_DIALER_GROUP = "Webshare-前置";
+const AGNES_CREATOR_PC_IP = "10.10.10.80";
 const AGNES_TARGET_SPOOF_IP = "10.10.10.6";
 // Sub-Store 在订阅上打标记，脚本不认机场名字。
 // [主] 只给一年期 v2-1Y。这份订阅不能更换，线路规格更高，始终先用。
@@ -35,7 +36,7 @@ const AGNES_URLS = {
   adobe_activation: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/AdobeActivation/AdobeActivation.list",
   lan: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Lan/Lan.list",
   leak_test: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/LeakTest.list",
-  account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=7",
+  account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=8",
   agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=10",
   youtube: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTube/YouTube.list",
   google_mobile: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/GoogleMobile.list",
@@ -428,22 +429,21 @@ async function main(config = {}) {
     "RULE-SET,adobe_activation,REJECT",
     "RULE-SET,lan,➡️ 国内",
 
-    // 2. 泄露测试与自媒体上传 / AI 核心防风控（固定 Webshare-Private，优先于 10.10.10.6 以防止 AI/自媒体出口漂移）
+    // 2. 泄露测试、单机自媒体上传（仅 10.10.10.80 主站/后台/API/上传）与 AI 核心防风控
     "RULE-SET,leak_test,🌍 国外",
-    "RULE-SET,account_safe,🔐 自媒体上传",
+    `AND,((SRC-IP-CIDR,${AGNES_CREATOR_PC_IP}/32),(RULE-SET,account_safe)),🔐 自媒体上传`,
     "RULE-SET,agnes_ai,👽 AI",
-    // YouTube 整表跟自媒体后台走同一个固定出口，避免上传在 Webshare、播放在会跳的香港节点。
-    "RULE-SET,youtube,🔐 自媒体上传",
     // Google STUN (UDP 19302) 必须在 Google IP 规则集前拒绝，防止 WebRTC 借 Google CIDR 暴露日常出口
     "AND,((NETWORK,udp),(DST-PORT,19302)),REJECT",
 
-    // 3. 单设备专属（10.10.10.6）：保住内网与 AI/账号安全后，其余流量一行接管进入香港定位
+    // 3. 单设备专属（10.10.10.6）：保住内网与 AI 后，其余流量一行接管进入香港定位
     `SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32,📍 社交定位`,
 
     // 4. 自定义强制直连白名单（保护全屋其他设备的 snssdk.com 等国内业务不被海外规则误杀）
     "RULE-SET,agnes_direct,➡️ 国内",
 
-    // 5. Google 与专属海外应用服务
+    // 5. YouTube 媒体流（含 .80 的 googlevideo/ytimg 及全屋其他设备的 YouTube）与 Google / 海外应用服务
+    "RULE-SET,youtube,🌍 国外",
     "RULE-SET,google_mobile,📱 Google移动服务",
     "RULE-SET,google_fcm,📱 Google移动服务",
     "RULE-SET,google,📱 Google移动服务",
