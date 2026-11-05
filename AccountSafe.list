@@ -4,6 +4,9 @@ DOMAIN,accounts.youtube.com
 DOMAIN,youtubei.googleapis.com
 DOMAIN-SUFFIX,youtube.com
 DOMAIN-SUFFIX,youtu.be
+DOMAIN,accounts.google.com
+DOMAIN,myaccount.google.com
+DOMAIN,oauth2.googleapis.com
 DOMAIN-SUFFIX,x.com
 DOMAIN-SUFFIX,twitter.com
 DOMAIN-SUFFIX,t.co
