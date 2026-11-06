@@ -16,6 +16,7 @@
  * 3. Single-device fine-grained location routing for 10.10.10.6 (`SRC-IP-CIDR,10.10.10.6/32,📍 社交定位`) after AI / AccountSafe.
  * 4. 2026-11-06: Webshare-Private forced to `udp: false` (Webshare SOCKS5 is TCP-only); `AI.list?v=11` drops
  *    Discord and shared SaaS auth/distribution domains; `ADirect.list?v=8` drops over-broad keywords.
+ *    DIRECT removed from 🔐 自媒体上传 / 👽 AI / 📱 Google移动服务 / 👯‍♂️ TikTok / 🙋 Telegram.
  */
 
 const AGNES_TEST_URL = "http://captive.apple.com/hotspot-detect.html";
@@ -233,13 +234,14 @@ async function main(config = {}) {
   const addStableGroup = (name, choices) =>
     groups.push(agnesSelect(name, agnesPrependStatic(choices, staticNames)));
 
+  // 2026-11-06: no DIRECT in 🔐 自媒体上传 / 👽 AI (a misclick would expose the home CN IP to
+  // accounts) nor in 📱 Google移动服务 / 👯‍♂️ TikTok / 🙋 Telegram (blocked in CN, DIRECT never works).
   addStableGroup("🔐 自媒体上传", [
     "台湾-自动",
     "日本-自动",
     "新加坡-自动",
     "美国-自动",
     "🐸 手动切换",
-    "DIRECT",
     "REJECT",
   ]);
   addBusinessGroup("📥 下载流量", [
@@ -256,7 +258,6 @@ async function main(config = {}) {
     "韩国-自动",
     "美国-自动",
     "🐸 手动切换",
-    "DIRECT",
     "REJECT",
   ]);
   addBusinessGroup("📱 Google移动服务", [
@@ -268,7 +269,6 @@ async function main(config = {}) {
     "美国-自动",
     "港台日新韩-自动",
     "🐸 手动切换",
-    "DIRECT",
     "REJECT",
   ]);
   addBusinessGroup("📘 GitHub", [
@@ -293,7 +293,6 @@ async function main(config = {}) {
     "韩国-自动",
     "香港-自动",
     "美国-自动",
-    "DIRECT",
     "REJECT",
     "🐸 手动切换",
   ]);
@@ -306,7 +305,6 @@ async function main(config = {}) {
     "韩国-自动",
     "美国-自动",
     "其他-自动",
-    "DIRECT",
     "REJECT",
     "🐸 手动切换",
   ]);
