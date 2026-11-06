@@ -9,11 +9,13 @@
  *
  * V5 Improvements (Pure IPv4 Architecture, frozen V4 preserved as IPv6/IPv4 dual-stack history):
  * 1. Pure IPv4 rule tree: removes `🛡 IPv6兜底` policy group and redundant `IP-CIDR6` rules (`::1/128`, `fc00::/7`, `fe80::/10`), keeping a single `IP-CIDR6,::/0,REJECT,no-resolve` safety fuse at the bottom.
- * 2. Clean 3-way boundary + Plan A Single-PC Self-Media & CDN Split (`AccountSafe.list?v=8` / `AI.list?v=10`):
+ * 2. Clean 3-way boundary + Plan A Single-PC Self-Media & CDN Split (`AccountSafe.list?v=9` / `AI.list?v=11`):
  *    - `🔐 自媒体上传`: ONLY matches creator workstation `10.10.10.80` (`AND,((SRC-IP-CIDR,10.10.10.80/32),(RULE-SET,account_safe))`) for self-media main sites, Studio, APIs, and upload endpoints (YouTube, X/Twitter, Instagram, Facebook/Threads) pinned to `Webshare-Private`. Media stream CDNs (`googlevideo.com`, `ytimg.com`, `twimg.com`, `cdninstagram.com`, `fbcdn.net`) and all other household devices bypass `Webshare-Private` and use fast airport nodes (`🌍 国外`).
  *    - `👽 AI`: strictly for AI & Google AI services (Gemini, AI Studio, NotebookLM, Antigravity, OpenAI, Claude, Grok).
  *    - `📱 Google移动服务`: all general Google services (Search, Google Account login, Gmail, Play, FCM).
  * 3. Single-device fine-grained location routing for 10.10.10.6 (`SRC-IP-CIDR,10.10.10.6/32,📍 社交定位`) after AI / AccountSafe.
+ * 4. 2026-11-06: Webshare-Private forced to `udp: false` (Webshare SOCKS5 is TCP-only); `AI.list?v=11` drops
+ *    Discord and shared SaaS auth/distribution domains; `ADirect.list?v=8` drops over-broad keywords.
  */
 
 const AGNES_TEST_URL = "http://captive.apple.com/hotspot-detect.html";
@@ -37,7 +39,7 @@ const AGNES_URLS = {
   lan: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Lan/Lan.list",
   leak_test: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/LeakTest.list",
   account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=9",
-  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=10",
+  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=11",
   youtube: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTube/YouTube.list",
   google_mobile: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/GoogleMobile.list",
   google_fcm: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/GoogleFCM/GoogleFCM.list",
@@ -56,7 +58,7 @@ const AGNES_URLS = {
   blizzard: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Blizzard/Blizzard.list",
   ea: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/ea.mrs",
   github: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/github.mrs",
-  agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=7",
+  agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=8",
   foreign_extra: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ForeignExtra.list",
   cncidr: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/cn.mrs",
   apple_cn: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/apple-cn.mrs",
@@ -161,7 +163,9 @@ async function main(config = {}) {
   if (staticProxies[0].type !== "socks5") {
     throw new Error("AGNES: Webshare-Private must be a socks5 proxy");
   }
-  staticProxies[0].udp = true;
+  // Webshare SOCKS5 is TCP-only (no UDP ASSOCIATE). Declare udp:false so UDP
+  // in 🔐 自媒体上传 / 👽 AI fails fast locally instead of a doomed relay attempt.
+  staticProxies[0].udp = false;
   staticProxies[0]["dialer-proxy"] = AGNES_WEBSHARE_DIALER_GROUP;
 
   const staticNames = staticProxies.map((proxy) => proxy.name);

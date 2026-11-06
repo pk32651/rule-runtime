@@ -47,9 +47,6 @@ DOMAIN,sydney.bing.com
 DOMAIN-SUFFIX,copilot.microsoft
 DOMAIN-SUFFIX,perplexity.ai
 DOMAIN-SUFFIX,midjourney.com
-DOMAIN-SUFFIX,discord.com
-DOMAIN-SUFFIX,discordapp.com
-DOMAIN-SUFFIX,discordapp.net
 DOMAIN-SUFFIX,stability.ai
 DOMAIN-SUFFIX,api.stability.ai
 DOMAIN-SUFFIX,groq.com
@@ -68,9 +65,6 @@ DOMAIN-SUFFIX,cursorvm.com
 DOMAIN-SUFFIX,anysphere.co
 DOMAIN-SUFFIX,anysphere.inc
 DOMAIN-SUFFIX,anysphere.com
-DOMAIN-SUFFIX,workos.com
-DOMAIN-SUFFIX,authkit.com
-DOMAIN-SUFFIX,todesktop.com
 DOMAIN-SUFFIX,poe.com
 DOMAIN-SUFFIX,coze.com
 DOMAIN-SUFFIX,mistral.ai
