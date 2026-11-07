@@ -13,7 +13,8 @@
  *    - Core overseas & leak-test sets (`leak_test`, `agnes_ai`, `youtube`,
  *      `google_mobile`, `google`) are matched BEFORE domestic rules so `google@cn`
  *      (`gstatic.com`, `fonts.googleapis.com`, etc.) never leaks via outside `DIRECT`.
- *    - Home LAN (`10.10.10.0/24`), DMZ (`10.10.20.0/24`), and all non-CN traffic
+ *    - Home LAN (`10.10.10.0/24`), DMZ (`10.10.20.0/24`), home subdomains
+ *      (`DOMAIN-SUFFIX,<homeDomain>,节点选择`), and all non-CN traffic
  *      (`MATCH,节点选择`) send the original domain name into `家中网关-AnyTLS` with
  *      0 local DNS queries; home OpenClash V5 handles resolution and upstream routing.
  * 2. Global Mode (`全局模式`, or switching `🏠 国内流量` -> `家中网关-AnyTLS`):
@@ -40,9 +41,12 @@
  *    - Rule providers download through `家中网关-AnyTLS`; a failed direct
  *      download on the outside network would empty the Google / leak-test sets
  *      and send `google@cn` back to DIRECT.
- *    - `*.lvmoyu.xyz` home-only names: real-ip + home dnsmasq through the tunnel
- *      → 10.10.x.x → existing LAN rules send them home. The apex `lvmoyu.xyz`
- *      (also the AnyTLS server) is untouched.
+ *    - Home subdomains (`*.lvmoyu.xyz` or future annual domain read dynamically
+ *      from `proxy.server`): `DOMAIN,<homeDomain>,🏠 国内流量` keeps the apex
+ *      unchanged, while `DOMAIN-SUFFIX,<homeDomain>,节点选择` (placed before
+ *      `agnes_direct`) sends all subdomains into the tunnel as domain names in
+ *      both System Proxy and TUN modes. Home OpenClash resolves `*.<homeDomain>`
+ *      via local Dnsmasq (`127.0.0.1:53`).
  *    - Proxy `ip-version: ipv4` (public DNS still has a stale AAAA for the server).
  */
 
@@ -50,8 +54,7 @@ const AGNES_HOME_GROUP = "节点选择";
 const AGNES_DOMESTIC_GROUP = "🏠 国内流量";
 const AGNES_HOME_PROXY = "家中网关-AnyTLS";
 const AGNES_HOME_DNS = `10.10.10.10#${AGNES_HOME_PROXY}`;
-// Home-only names exist only in home dnsmasq (public DNS: NXDOMAIN).
-const AGNES_HOME_NAMES = "*.lvmoyu.xyz";
+const AGNES_DEFAULT_HOME_DOMAIN = "lvmoyu.xyz";
 
 const AGNES_DIRECT_DNS = [
   "https://dns.alidns.com/dns-query",
@@ -87,6 +90,19 @@ function agnesMobileRuleProvider(name, behavior = "classical") {
   };
 }
 
+function agnesExtractHomeDomain(server) {
+  const raw = String(server || "")
+    .trim()
+    .replace(/^\.+|\.+$/g, "")
+    .toLowerCase();
+  const isIpv4 = /^(\d{1,3}\.){3}\d{1,3}$/.test(raw);
+  const isIpv6 = raw.includes(":");
+  if (!raw || isIpv4 || isIpv6) {
+    return AGNES_DEFAULT_HOME_DOMAIN;
+  }
+  return raw;
+}
+
 function main(config = {}) {
   if (!config || typeof config !== "object" || Array.isArray(config)) {
     throw new Error("AGNES Mobile: Mihomo config input must be an object");
@@ -96,6 +112,7 @@ function main(config = {}) {
     throw new Error("AGNES Mobile: expected exactly one anytls proxy");
   }
   const proxy = proxies[0];
+  const homeDomain = agnesExtractHomeDomain(proxy.server);
   proxy.name = AGNES_HOME_PROXY;
   proxy.udp = true;
   // Home is IPv4-only; public DNS still carries a stale AAAA for the server name.
@@ -137,7 +154,6 @@ function main(config = {}) {
       "time.*.com",
       "ntp.*.com",
       "+.stun.*",
-      AGNES_HOME_NAMES,
     ],
     "respect-rules": false,
     "use-hosts": true,
@@ -149,7 +165,6 @@ function main(config = {}) {
     "nameserver-policy": {
       "*.lan": [AGNES_HOME_DNS],
       "*.local": [AGNES_HOME_DNS],
-      [AGNES_HOME_NAMES]: [AGNES_HOME_DNS],
     },
   };
 
@@ -198,6 +213,10 @@ function main(config = {}) {
     "RULE-SET,youtube,节点选择",
     "RULE-SET,google_mobile,节点选择",
     "RULE-SET,google,节点选择",
+    // Keep apex domain in domestic group; send all subdomains (*.lvmoyu.xyz) into home tunnel
+    // before agnes_direct (which contains DOMAIN-SUFFIX,<homeDomain>). Auto-follows proxy.server.
+    `DOMAIN,${homeDomain},${AGNES_DOMESTIC_GROUP}`,
+    `DOMAIN-SUFFIX,${homeDomain},${AGNES_HOME_GROUP}`,
     "RULE-SET,apple_cn,🏠 国内流量",
     "RULE-SET,agnes_direct,🏠 国内流量",
     "RULE-SET,china_direct,🏠 国内流量",
