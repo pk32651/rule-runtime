@@ -21,19 +21,37 @@
  *      `nameserver`, all domains hold a `198.18.x.x` Fake-IP on the client.
  *    - Switching to Global Mode (or toggling `🏠 国内流量` to `家中网关-AnyTLS`)
  *      takes effect immediately without flushing browser/OS DNS caches: 100% of
- *      traffic sends original domains into `家中网关-AnyTLS` with 0 outside DNS queries.
+ *      traffic sends original domains into `家中网关-AnyTLS`. The only outside DNS
+ *      query left is resolving the AnyTLS server name via `proxy-server-nameserver`.
  * 3. Outside Network Anti-Leak Hardening:
- *    - `IP-CIDR6,::/0,REJECT,no-resolve` at top of rules + `ipv6: false` blocks
- *      outside 5G / Wi-Fi native IPv6 bypass.
- *    - WebRTC STUN UDP ports (`19302`, `3478`, `5349`) are rejected before `DIRECT`.
- *    - `tun` block (`stack: mixed`, `strict-route: true`, `dns-hijack`) prevents
- *      browser DoH / hard-coded DNS from bypassing Mihomo DNS.
+ *    - `IP-CIDR6,::/0,REJECT,no-resolve` at top of rules. Top-level `ipv6: true`
+ *      (2026-11-07 fix) so TUN actually captures IPv6 and the REJECT can see it;
+ *      `dns.ipv6: false` keeps AAAA out. With `ipv6: false` TUN may not route
+ *      IPv6 at all and native outside IPv6 would bypass Mihomo entirely.
+ *    - WebRTC STUN UDP ports (`19302`, `3478`, `5349`) are rejected after the CN
+ *      rules (same order as home V5): foreign STUN goes home and is rejected
+ *      there anyway; domestic calls (Tencent Meeting, Feishu…) keep working.
+ *    - `tun` block (`stack: mixed`, `strict-route: true`, `dns-hijack` port 53).
+ *      Clash Verge Rev / Android clients override it with their own TUN switch:
+ *      turn TUN on in the client UI. dns-hijack covers port 53 only, not DoH.
+ * 4. 2026-11-07 fixes:
+ *    - Explicit `GLOBAL` group containing only `家中网关-AnyTLS`. Mihomo's
+ *      auto-generated GLOBAL defaults to DIRECT, which made Global Mode leak.
+ *    - Rule providers download through `家中网关-AnyTLS`; a failed direct
+ *      download on the outside network would empty the Google / leak-test sets
+ *      and send `google@cn` back to DIRECT.
+ *    - `*.lvmoyu.xyz` home-only names: real-ip + home dnsmasq through the tunnel
+ *      → 10.10.x.x → existing LAN rules send them home. The apex `lvmoyu.xyz`
+ *      (also the AnyTLS server) is untouched.
+ *    - Proxy `ip-version: ipv4` (public DNS still has a stale AAAA for the server).
  */
 
 const AGNES_HOME_GROUP = "节点选择";
 const AGNES_DOMESTIC_GROUP = "🏠 国内流量";
 const AGNES_HOME_PROXY = "家中网关-AnyTLS";
 const AGNES_HOME_DNS = `10.10.10.10#${AGNES_HOME_PROXY}`;
+// Home-only names exist only in home dnsmasq (public DNS: NXDOMAIN).
+const AGNES_HOME_NAMES = "*.lvmoyu.xyz";
 
 const AGNES_DIRECT_DNS = [
   "https://dns.alidns.com/dns-query",
@@ -64,6 +82,8 @@ function agnesMobileRuleProvider(name, behavior = "classical") {
     url,
     path: `./rule_provider/agnes_mobile_${name}.${isMrs ? "mrs" : "list"}`,
     interval: 86400,
+    // Download via home tunnel: a failed outside-direct download would empty the set.
+    proxy: AGNES_HOME_PROXY,
   };
 }
 
@@ -78,6 +98,8 @@ function main(config = {}) {
   const proxy = proxies[0];
   proxy.name = AGNES_HOME_PROXY;
   proxy.udp = true;
+  // Home is IPv4-only; public DNS still carries a stale AAAA for the server name.
+  proxy["ip-version"] = "ipv4";
   if (proxy["skip-cert-verify"] == null) proxy["skip-cert-verify"] = false;
 
   config.port = 7890;
@@ -85,7 +107,8 @@ function main(config = {}) {
   config["allow-lan"] = false;
   config.mode = "rule";
   config["log-level"] = "info";
-  config.ipv6 = false;
+  // true so TUN captures IPv6 and `IP-CIDR6,::/0,REJECT` can drop it (dns.ipv6 stays false).
+  config.ipv6 = true;
   config["find-process-mode"] = "strict";
   config["unified-delay"] = true;
   config["tcp-concurrent"] = true;
@@ -114,6 +137,7 @@ function main(config = {}) {
       "time.*.com",
       "ntp.*.com",
       "+.stun.*",
+      AGNES_HOME_NAMES,
     ],
     "respect-rules": false,
     "use-hosts": true,
@@ -125,6 +149,7 @@ function main(config = {}) {
     "nameserver-policy": {
       "*.lan": [AGNES_HOME_DNS],
       "*.local": [AGNES_HOME_DNS],
+      [AGNES_HOME_NAMES]: [AGNES_HOME_DNS],
     },
   };
 
@@ -139,6 +164,12 @@ function main(config = {}) {
       name: AGNES_DOMESTIC_GROUP,
       type: "select",
       proxies: ["DIRECT", AGNES_HOME_PROXY],
+    },
+    {
+      // Global Mode uses this group. Mihomo's auto GLOBAL defaults to DIRECT.
+      name: "GLOBAL",
+      type: "select",
+      proxies: [AGNES_HOME_PROXY],
     },
   ];
 
@@ -162,9 +193,6 @@ function main(config = {}) {
     "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
     "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve",
     "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve",
-    "AND,((NETWORK,udp),(DST-PORT,19302)),REJECT",
-    "AND,((NETWORK,udp),(DST-PORT,3478)),REJECT",
-    "AND,((NETWORK,udp),(DST-PORT,5349)),REJECT",
     "RULE-SET,leak_test,节点选择",
     "RULE-SET,agnes_ai,节点选择",
     "RULE-SET,youtube,节点选择",
@@ -176,6 +204,10 @@ function main(config = {}) {
     "GEOSITE,cn,🏠 国内流量",
     "RULE-SET,cncidr,🏠 国内流量,no-resolve",
     "GEOIP,CN,🏠 国内流量,no-resolve",
+    // Foreign STUN only (CN already matched above); same order as home V5.
+    "AND,((NETWORK,udp),(DST-PORT,19302)),REJECT",
+    "AND,((NETWORK,udp),(DST-PORT,3478)),REJECT",
+    "AND,((NETWORK,udp),(DST-PORT,5349)),REJECT",
     "MATCH,节点选择",
   ];
   return config;
