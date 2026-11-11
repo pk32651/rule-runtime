@@ -81,6 +81,6 @@ DOMAIN-SUFFIX,coze.com
 DOMAIN-SUFFIX,mistral.ai
 DOMAIN-SUFFIX,replicate.com
 DOMAIN-SUFFIX,replicate.delivery
-DOMAIN,challenges.cloudflare.com
+DOMAIN-SUFFIX,challenges.cloudflare.com
 DOMAIN-SUFFIX,arkoselabs.com
 DOMAIN-SUFFIX,funcaptcha.com
