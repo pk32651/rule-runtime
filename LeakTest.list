@@ -10,7 +10,5 @@ DOMAIN-SUFFIX,ipinfo.io
 DOMAIN-SUFFIX,ip.sb
 DOMAIN-SUFFIX,whoer.net
 DOMAIN-SUFFIX,ifconfig.me
-DOMAIN-SUFFIX,cloudflare.com
-DOMAIN,www.cloudflare.com
 DOMAIN,o-o.myaddr.l.google.com
 DOMAIN,whoami.akamai.net

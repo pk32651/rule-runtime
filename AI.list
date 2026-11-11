@@ -12,6 +12,7 @@ DOMAIN-SUFFIX,openaicomapi.trafficmanager.net
 DOMAIN-SUFFIX,ios.chat.openai.com
 DOMAIN-SUFFIX,android.chat.openai.com
 DOMAIN-SUFFIX,sora.com
+DOMAIN-SUFFIX,chat.com
 DOMAIN-KEYWORD,anthropic
 DOMAIN-KEYWORD,claude
 DOMAIN-SUFFIX,anthropic.com
@@ -39,9 +40,19 @@ DOMAIN,cloudcode-pa.googleapis.com
 DOMAIN,daily-cloudcode-pa.googleapis.com
 DOMAIN,daily-cloudcode-pa.sandbox.googleapis.com
 DOMAIN,autopush-cloudcode-pa.sandbox.googleapis.com
+DOMAIN-SUFFIX,labs.google
+DOMAIN,labs.google.com
+DOMAIN-SUFFIX,jules.google
+DOMAIN,jules.google.com
+DOMAIN-SUFFIX,firebase.studio
+DOMAIN,idx.google.com
 DOMAIN-SUFFIX,x.ai
 DOMAIN-SUFFIX,grok.com
 DOMAIN-SUFFIX,grokusercontent.com
+DOMAIN-SUFFIX,x.com
+DOMAIN-SUFFIX,twitter.com
+DOMAIN-SUFFIX,t.co
+DOMAIN-SUFFIX,twitteroauth.com
 DOMAIN,copilot.microsoft.com
 DOMAIN,sydney.bing.com
 DOMAIN-SUFFIX,copilot.microsoft
@@ -70,3 +81,6 @@ DOMAIN-SUFFIX,coze.com
 DOMAIN-SUFFIX,mistral.ai
 DOMAIN-SUFFIX,replicate.com
 DOMAIN-SUFFIX,replicate.delivery
+DOMAIN,challenges.cloudflare.com
+DOMAIN-SUFFIX,arkoselabs.com
+DOMAIN-SUFFIX,funcaptcha.com

@@ -17,6 +17,10 @@
  * 4. 2026-11-06: Webshare-Private forced to `udp: false` (Webshare SOCKS5 is TCP-only); `AI.list?v=11` drops
  *    Discord and shared SaaS auth/distribution domains; `ADirect.list?v=8` drops over-broad keywords.
  *    DIRECT removed from 🔐 自媒体上传 / 👽 AI / 📱 Google移动服务 / 👯‍♂️ TikTok / 🙋 Telegram.
+ * 5. 2026-11-11: Dedicated Creator Profile mixed listener (`0.0.0.0:65531` -> `🔐 自媒体上传` with media CDN
+ *    & Google binary offload); `.80` full Google ecosystem unified on `🔐 自媒体上传`; mobile X + Grok unified
+ *    on `👽 AI` (`AI.list?v=12`); Turnstile/Arkose/Stripe anti-fraud unified (`AccountSafe.list?v=10`);
+ *    Google STUN expanded to `19302-19309` and `LeakTest.list?v=2` moved after `:65531` & `.6`.
  */
 
 const AGNES_TEST_URL = "http://captive.apple.com/hotspot-detect.html";
@@ -27,6 +31,9 @@ const AGNES_STATIC_PROXY_NAME = "Webshare-Private";
 const AGNES_WEBSHARE_DIALER_GROUP = "Webshare-前置";
 const AGNES_CREATOR_PC_IP = "10.10.10.80";
 const AGNES_TARGET_SPOOF_IP = "10.10.10.6";
+const AGNES_CREATOR_LISTENER_NAME = "creator-mixed";
+const AGNES_CREATOR_LISTENER_PORT = 65531;
+const AGNES_HOME_DOMAIN = "lvmoyu.xyz";
 // Sub-Store 在订阅上打标记，脚本不认机场名字。
 // [主] 只给一年期 v2-1Y。这份订阅不能更换，线路规格更高，始终先用。
 // [备] 是可替换的第二条。换订阅时仍打 [备]。整组 [主] 不可用时才转到 [备]。
@@ -38,9 +45,9 @@ const AGNES_URLS = {
   adobe: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/adobe.mrs",
   adobe_activation: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/AdobeActivation/AdobeActivation.list",
   lan: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Lan/Lan.list",
-  leak_test: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/LeakTest.list",
-  account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=9",
-  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=11",
+  leak_test: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/LeakTest.list?v=2",
+  account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=10",
+  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=12",
   youtube: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTube/YouTube.list",
   google_mobile: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/GoogleMobile.list",
   google_fcm: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/GoogleFCM/GoogleFCM.list",
@@ -59,8 +66,8 @@ const AGNES_URLS = {
   blizzard: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Blizzard/Blizzard.list",
   ea: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/ea.mrs",
   github: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/github.mrs",
-  agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=8",
-  foreign_extra: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ForeignExtra.list",
+  agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=9",
+  foreign_extra: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ForeignExtra.list?v=2",
   cncidr: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/cn.mrs",
   apple_cn: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/apple-cn.mrs",
   china_direct: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/cn.mrs",
@@ -418,11 +425,20 @@ async function main(config = {}) {
     ruleProviders[name] = agnesRuleProvider(name, behavior);
   }
 
+  config.listeners = [
+    {
+      name: AGNES_CREATOR_LISTENER_NAME,
+      type: "mixed",
+      port: AGNES_CREATOR_LISTENER_PORT,
+      listen: "0.0.0.0",
+      udp: true,
+    },
+  ];
   config.proxies = proxies;
   config["proxy-groups"] = groups;
   config["rule-providers"] = ruleProviders;
   config.rules = [
-    // 1. 本地回环与内网私有地址（纯 IPv4 最高优先级）
+    // 1. 本地回环、内网私有地址与家庭内网域名（纯 IPv4 最高优先级，保证 :65531 运营窗口访问内网直通）
     "IP-CIDR,127.0.0.0/8,REJECT,no-resolve",
     "IP-CIDR,192.168.0.0/16,➡️ 国内,no-resolve",
     "IP-CIDR,10.0.0.0/8,➡️ 国内,no-resolve",
@@ -430,22 +446,52 @@ async function main(config = {}) {
     "RULE-SET,adobe,REJECT",
     "RULE-SET,adobe_activation,REJECT",
     "RULE-SET,lan,➡️ 国内",
+    `DOMAIN-SUFFIX,${AGNES_HOME_DOMAIN},➡️ 国内`,
 
-    // 2. 泄露测试、单机自媒体上传（仅 10.10.10.80 主站/后台/API/上传）与 AI 核心防风控
-    "RULE-SET,leak_test,🌍 国外",
+    // 1.5 WebRTC STUN 前置防护与任意电脑「运营浏览器 Profile」专属端口 (:65531) 100% 闭环隔离
+    // Google STUN (UDP 19302-19309) 必须在 Google IP 规则集前全局拒绝，防止 WebRTC 借 Google CIDR 暴露日常香港出口
+    "AND,((NETWORK,udp),(DST-PORT,19302-19309)),REJECT",
+    `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(NETWORK,udp),(DST-PORT,3478)),REJECT`,
+    `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(NETWORK,udp),(DST-PORT,5349)),REJECT`,
+    // 专属端口内剥离纯观看音视频/图片流 CDN 与 Google 软件大包走高速机场，其余 100% 流量锁入 🔐 自媒体上传
+    `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(DOMAIN-SUFFIX,googlevideo.com)),🌍 国外`,
+    `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(DOMAIN-SUFFIX,ytimg.com)),🌍 国外`,
+    `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(DOMAIN-SUFFIX,twimg.com)),🌍 国外`,
+    `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(DOMAIN-SUFFIX,twvid.com)),🌍 国外`,
+    `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(DOMAIN-SUFFIX,cdninstagram.com)),🌍 国外`,
+    `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(DOMAIN-SUFFIX,fbcdn.net)),🌍 国外`,
+    `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(DOMAIN,dl.google.com)),📱 Google移动服务`,
+    `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(DOMAIN,dl-ssl.google.com)),📱 Google移动服务`,
+    `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(DOMAIN-SUFFIX,gvt1.com)),📱 Google移动服务`,
+    `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(DOMAIN-SUFFIX,gvt2.com)),📱 Google移动服务`,
+    `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(DOMAIN-SUFFIX,gvt3.com)),📱 Google移动服务`,
+    `IN-PORT,${AGNES_CREATOR_LISTENER_PORT},🔐 自媒体上传`,
+
+    // 2. 透明网关：单机自媒体上传（.80 主站/后台/上传/Turnstile/Stripe）与全屋 AI + 手机 X/Grok 同出口防风控
     `AND,((SRC-IP-CIDR,${AGNES_CREATOR_PC_IP}/32),(RULE-SET,account_safe)),🔐 自媒体上传`,
     "RULE-SET,agnes_ai,👽 AI",
-    // Google STUN (UDP 19302) 必须在 Google IP 规则集前拒绝，防止 WebRTC 借 Google CIDR 暴露日常出口
-    "AND,((NETWORK,udp),(DST-PORT,19302)),REJECT",
 
-    // 3. 单设备专属（10.10.10.6）：保住内网与 AI 后，其余流量一行接管进入香港定位
+    // 3. 单设备专属（10.10.10.6）：保住内网与 AI 并前置拦截 STUN 后，其余流量一行接管进入社交定位
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(NETWORK,udp),(DST-PORT,3478)),REJECT`,
+    `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(NETWORK,udp),(DST-PORT,5349)),REJECT`,
     `SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32,📍 社交定位`,
+
+    // 3.5 泄露测试站（置于 :65531 与 .6 之后，使其真实反映专属端口与专机出口；日常设备进 🌍 国外）
+    "RULE-SET,leak_test,🌍 国外",
 
     // 4. 自定义强制直连白名单（保护全屋其他设备的 snssdk.com 等国内业务不被海外规则误杀）
     "RULE-SET,agnes_direct,➡️ 国内",
 
-    // 5. YouTube 媒体流（含 .80 的 googlevideo/ytimg 及全屋其他设备的 YouTube）与 Google / 海外应用服务
+    // 5. YouTube 媒体流、.80 Google 全家桶同出口统一（剥离软件更新大包）与全屋海外应用服务
     "RULE-SET,youtube,🌍 国外",
+    "DOMAIN,dl.google.com,📱 Google移动服务",
+    "DOMAIN,dl-ssl.google.com,📱 Google移动服务",
+    "DOMAIN-SUFFIX,gvt1.com,📱 Google移动服务",
+    "DOMAIN-SUFFIX,gvt2.com,📱 Google移动服务",
+    "DOMAIN-SUFFIX,gvt3.com,📱 Google移动服务",
+    `AND,((SRC-IP-CIDR,${AGNES_CREATOR_PC_IP}/32),(RULE-SET,google_mobile)),🔐 自媒体上传`,
+    `AND,((SRC-IP-CIDR,${AGNES_CREATOR_PC_IP}/32),(RULE-SET,google_fcm)),🔐 自媒体上传`,
+    `AND,((SRC-IP-CIDR,${AGNES_CREATOR_PC_IP}/32),(RULE-SET,google)),🔐 自媒体上传`,
     "RULE-SET,google_mobile,📱 Google移动服务",
     "RULE-SET,google_fcm,📱 Google移动服务",
     "RULE-SET,google,📱 Google移动服务",
