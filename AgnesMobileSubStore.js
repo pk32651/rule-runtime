@@ -4,50 +4,41 @@
  * The Sub-Store subscription (`agnes-mobile-home` / `BACKHOME`) supplies
  * exactly one `anytls` node (`家中网关-AnyTLS`).
  *
- * Dual-Mode Anti-Leak Design (2026-11-07):
+ * Dual-Mode Anti-Leak & V5 Consistency Design (2026-11-07, hardened 2026-11-13):
  * 1. Rule Mode (`规则模式`):
  *    - Domestic traffic (`apple_cn`, `agnes_direct`, `china_direct`, `cncidr`, `CN`)
  *      routes to `🏠 国内流量` (defaults to `DIRECT`). When exiting via `DIRECT`,
  *      Mihomo resolves the domain locally via `direct-nameserver` (Ali/DNSPod DoH)
  *      and connects directly from the outside network without going through home.
- *    - Core overseas & leak-test sets (`leak_test`, `agnes_ai`, `youtube`,
- *      `google_mobile`, `google`) are matched BEFORE domestic rules so `google@cn`
- *      (`gstatic.com`, `fonts.googleapis.com`, etc.) never leaks via outside `DIRECT`.
- *    - Home LAN (`10.10.10.0/24`), DMZ (`10.10.20.0/24`), home subdomains
- *      (`DOMAIN-SUFFIX,<homeDomain>,节点选择`), and all non-CN traffic
- *      (`MATCH,节点选择`) send the original domain name into `家中网关-AnyTLS` with
- *      0 local DNS queries; home OpenClash V5 handles resolution and upstream routing.
+ *    - Core overseas & anti-fraud sets (`leak_test`, `account_safe`, `agnes_ai`,
+ *      `youtube`, `google_mobile`, `google`) are matched BEFORE domestic rules so
+ *      `google@cn` (`gstatic.com`, `fonts.googleapis.com`, etc.) and shared auth/payment
+ *      domains never leak via outside `DIRECT`.
+ *    - Home LAN (`10.10.10.0/24` — including `:65531` Creator Profile listener),
+ *      DMZ (`10.10.20.0/24`), home subdomains (`DOMAIN-SUFFIX,<homeDomain>,节点选择`),
+ *      and all non-CN traffic (`MATCH,节点选择`) send the original domain name into
+ *      `家中网关-AnyTLS` with 0 local DNS queries; home OpenClash V5 handles
+ *      resolution and upstream routing.
  * 2. Global Mode (`全局模式`, or switching `🏠 国内流量` -> `家中网关-AnyTLS`):
  *    - Because `geosite:cn` is NOT in `fake-ip-filter` and `#DIRECT` is removed from
  *      `nameserver`, all domains hold a `198.18.x.x` Fake-IP on the client.
  *    - Switching to Global Mode (or toggling `🏠 国内流量` to `家中网关-AnyTLS`)
  *      takes effect immediately without flushing browser/OS DNS caches: 100% of
- *      traffic sends original domains into `家中网关-AnyTLS`. The only outside DNS
- *      query left is resolving the AnyTLS server name via `proxy-server-nameserver`.
- * 3. Outside Network Anti-Leak Hardening:
- *    - `IP-CIDR6,::/0,REJECT,no-resolve` at top of rules. Top-level `ipv6: true`
- *      (2026-11-07 fix) so TUN actually captures IPv6 and the REJECT can see it;
- *      `dns.ipv6: false` keeps AAAA out. With `ipv6: false` TUN may not route
- *      IPv6 at all and native outside IPv6 would bypass Mihomo entirely.
- *    - WebRTC STUN UDP ports (`19302`, `3478`, `5349`) are rejected after the CN
- *      rules (same order as home V5): foreign STUN goes home and is rejected
- *      there anyway; domestic calls (Tencent Meeting, Feishu…) keep working.
- *    - `tun` block (`stack: mixed`, `strict-route: true`, `dns-hijack` port 53).
- *      Clash Verge Rev / Android clients override it with their own TUN switch:
- *      turn TUN on in the client UI. dns-hijack covers port 53 only, not DoH.
- * 4. 2026-11-07 fixes:
- *    - Explicit `GLOBAL` group containing only `家中网关-AnyTLS`. Mihomo's
- *      auto-generated GLOBAL defaults to DIRECT, which made Global Mode leak.
- *    - Rule providers download through `家中网关-AnyTLS`; a failed direct
- *      download on the outside network would empty the Google / leak-test sets
- *      and send `google@cn` back to DIRECT.
- *    - Home subdomains (`*.lvmoyu.xyz` or future annual domain read dynamically
- *      from `proxy.server`): `DOMAIN,<homeDomain>,🏠 国内流量` keeps the apex
- *      unchanged, while `DOMAIN-SUFFIX,<homeDomain>,节点选择` (placed before
- *      `agnes_direct`) sends all subdomains into the tunnel as domain names in
- *      both System Proxy and TUN modes. Home OpenClash resolves `*.<homeDomain>`
- *      via local Dnsmasq (`127.0.0.1:53`).
- *    - Proxy `ip-version: ipv4` (public DNS still has a stale AAAA for the server).
+ *      traffic sends original domains into `家中网关-AnyTLS`.
+ * 3. Outside Network Anti-Leak, WebRTC & QUIC Hardening (2026-11-13):
+ *    - `节点选择` and `GLOBAL` contain ONLY `家中网关-AnyTLS` (`DIRECT` removed from
+ *      `节点选择` to prevent accidental tap leaks on mobile UI).
+ *    - `IP-CIDR6,::/0,REJECT,no-resolve` at top of rules with top-level `ipv6: true`
+ *      so TUN captures outside native 5G/hotel IPv6 and drops it cleanly (`dns.ipv6: false`).
+ *    - `+.stun.*` removed from `fake-ip-filter` so STUN hosts never trigger real-IP
+ *      resolution. Google WebRTC STUN (`UDP 19302-19309`) is rejected globally BEFORE
+ *      any overseas rule-set can send it into the tunnel.
+ *    - Overseas QUIC (`UDP 443`) and non-standard WebRTC STUN/TURN (`UDP 3478/5349`)
+ *      are rejected both on the 6 fronted overseas sets and after domestic rules —
+ *      matching home V5's `disable_udp_quic=1` (which AnyTLS loopback handoff would
+ *      otherwise bypass) while keeping domestic WeChat/Tencent Meeting calls intact.
+ *    - `sniffer` enabled (`parse-pure-ip: true`, `override-destination: false`) aligned
+ *      with home V5 to catch hardcoded IP connections without rewriting destinations.
  */
 
 const AGNES_HOME_GROUP = "节点选择";
@@ -64,13 +55,14 @@ const AGNES_DIRECT_DNS = [
 ];
 
 const AGNES_MOBILE_URLS = {
-  leak_test: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/LeakTest.list",
-  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=11",
+  leak_test: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/LeakTest.list?v=2",
+  account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=10",
+  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=12",
   youtube: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTube/YouTube.list",
   google_mobile: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/GoogleMobile.list",
   google: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Google/Google.list",
   apple_cn: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/apple-cn.mrs",
-  agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=8",
+  agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=9",
   china_direct: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/cn.mrs",
   cncidr: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/cn.mrs",
 };
@@ -115,7 +107,7 @@ function main(config = {}) {
   const homeDomain = agnesExtractHomeDomain(proxy.server);
   proxy.name = AGNES_HOME_PROXY;
   proxy.udp = true;
-  // Home is IPv4-only; public DNS still carries a stale AAAA for the server name.
+  // Home is IPv4-only; public DNS may carry a stale AAAA for the server name.
   proxy["ip-version"] = "ipv4";
   if (proxy["skip-cert-verify"] == null) proxy["skip-cert-verify"] = false;
 
@@ -153,7 +145,6 @@ function main(config = {}) {
       "+.msftncsi.com",
       "time.*.com",
       "ntp.*.com",
-      "+.stun.*",
     ],
     "respect-rules": false,
     "use-hosts": true,
@@ -168,12 +159,39 @@ function main(config = {}) {
     },
   };
 
+  config.sniffer = {
+    enable: true,
+    "parse-pure-ip": true,
+    "force-dns-mapping": true,
+    "override-destination": false,
+    sniff: {
+      HTTP: {
+        ports: [80, "8080-8880"],
+        "override-destination": false,
+      },
+      TLS: {
+        ports: [443, 8443],
+      },
+      QUIC: {
+        ports: [443],
+      },
+    },
+    "skip-domain": [
+      "+.apple.com",
+      "+.push.apple.com",
+      "Mijia Cloud",
+      "dlg.io.mi.com",
+      "+.oray.com",
+      "+.sunlogin.net",
+    ],
+  };
+
   config.proxies = proxies;
   config["proxy-groups"] = [
     {
       name: AGNES_HOME_GROUP,
       type: "select",
-      proxies: [AGNES_HOME_PROXY, "DIRECT"],
+      proxies: [AGNES_HOME_PROXY],
     },
     {
       name: AGNES_DOMESTIC_GROUP,
@@ -190,6 +208,7 @@ function main(config = {}) {
 
   config["rule-providers"] = {
     leak_test: agnesMobileRuleProvider("leak_test"),
+    account_safe: agnesMobileRuleProvider("account_safe"),
     agnes_ai: agnesMobileRuleProvider("agnes_ai"),
     youtube: agnesMobileRuleProvider("youtube"),
     google_mobile: agnesMobileRuleProvider("google_mobile"),
@@ -208,7 +227,12 @@ function main(config = {}) {
     "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
     "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve",
     "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve",
+    // Global Google WebRTC STUN block (must precede Google rule-sets; never used by domestic apps).
+    "AND,((NETWORK,udp),(DST-PORT,19302-19309)),REJECT",
+    // Block QUIC (UDP 443) and STUN/TURN (UDP 3478/5349) on fronted overseas sets before they enter the tunnel.
+    "AND,((NETWORK,udp),(DST-PORT,443/3478/5349),(OR,((RULE-SET,leak_test),(RULE-SET,account_safe),(RULE-SET,agnes_ai),(RULE-SET,youtube),(RULE-SET,google_mobile),(RULE-SET,google)))),REJECT",
     "RULE-SET,leak_test,节点选择",
+    "RULE-SET,account_safe,节点选择",
     "RULE-SET,agnes_ai,节点选择",
     "RULE-SET,youtube,节点选择",
     "RULE-SET,google_mobile,节点选择",
@@ -223,8 +247,8 @@ function main(config = {}) {
     "GEOSITE,cn,🏠 国内流量",
     "RULE-SET,cncidr,🏠 国内流量,no-resolve",
     "GEOIP,CN,🏠 国内流量,no-resolve",
-    // Foreign STUN only (CN already matched above); same order as home V5.
-    "AND,((NETWORK,udp),(DST-PORT,19302)),REJECT",
+    // Block QUIC (UDP 443, aligning with home fw4 disable_udp_quic=1) and STUN/TURN for all remaining non-CN traffic.
+    "AND,((NETWORK,udp),(DST-PORT,443)),REJECT",
     "AND,((NETWORK,udp),(DST-PORT,3478)),REJECT",
     "AND,((NETWORK,udp),(DST-PORT,5349)),REJECT",
     "MATCH,节点选择",
