@@ -21,9 +21,11 @@
  *    & Google binary offload); `.80` full Google ecosystem unified on `🔐 自媒体上传`; mobile X + Grok unified
  *    on `👽 AI` (`AI.list?v=12`); Turnstile/Arkose/Stripe anti-fraud unified (`AccountSafe.list?v=10`);
  *    Google STUN expanded to `19302-19309` and `LeakTest.list?v=2` moved after `:65531` & `.6`.
- * 6. 2026-11-17: Global overseas payment policy group `💳 海外支付` (`Payment.list?v=1`, default `Webshare-Private`,
- *    no `DIRECT`); cross-list deduplication (`AccountSafe.list?v=11`, `AI.list?v=13`, `ADirect.list?v=10`);
- *    redundant `📘 GitHub` / `🙋 Telegram` / `📀 音乐` UI groups merged into `🌍 国外` while keeping rule-providers.
+ * 6. 2026-11-17: Global overseas payment policy group `💳 海外支付` (`Payment.list?v=2`, default `Webshare-Private`,
+ *    no `DIRECT`); cross-list deduplication (`AccountSafe.list?v=11`, `AI.list?v=14`, `ADirect.list?v=10`,
+ *    `ForeignExtra.list?v=3`); redundant `📘 GitHub` / `🙋 Telegram` / `📀 音乐` UI groups merged into `🌍 国外`;
+ *    all stale `blackmatrix7` `.list` external sets upgraded to daily-built `MetaCubeX/meta-rules-dat` `.mrs`
+ *    with strict domain-before-IP (`no-resolve`) separation and `198.18.0.0/16` stale Fake-IP leak fuse.
  */
 
 const AGNES_TEST_URL = "http://captive.apple.com/hotspot-detect.html";
@@ -46,28 +48,29 @@ const AGNES_INFO_NODE = /到期|流量|获取|重置|套餐|剩余|官网|导航
 
 const AGNES_URLS = {
   adobe: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/adobe.mrs",
-  adobe_activation: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/AdobeActivation/AdobeActivation.list",
-  lan: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Lan/Lan.list",
+  adobe_activation: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/adobe-activation.mrs",
+  lan: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/private.mrs",
   leak_test: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/LeakTest.list?v=2",
   account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=11",
   agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=14",
   agnes_payment: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/Payment.list?v=2",
-  youtube: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTube/YouTube.list",
+  youtube: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/youtube.mrs",
   google_mobile: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/GoogleMobile.list",
-  google_fcm: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/GoogleFCM/GoogleFCM.list",
-  google: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Google/Google.list",
-  game_download: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Game/GameDownload/GameDownload.list",
-  game_download_cn: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Game/GameDownloadCN/GameDownloadCN.list",
+  google_fcm: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/googlefcm.mrs",
+  google: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/google.mrs",
+  google_ip: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/google.mrs",
+  game_download: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/category-game-platforms-download.mrs",
+  game_download_cn: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/category-game-platforms-download@cn.mrs",
   steam_cn: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/steam@cn.mrs",
-  xunlei: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Xunlei/Xunlei.list",
-  baidu_cloud: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Cloud/BaiduCloud/BaiduCloud.list",
-  tiktok: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/TikTok/TikTok.list",
-  telegram: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Telegram/Telegram.list",
-  spotify: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Spotify/Spotify.list",
+  xunlei: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/xunlei.mrs",
+  tiktok: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/tiktok.mrs",
+  telegram: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/telegram.mrs",
+  telegram_ip: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/telegram.mrs",
+  spotify: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/spotify.mrs",
   agnes_game: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/Game.list?v=2",
-  steam: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Steam/Steam.list",
+  steam: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/steam.mrs",
   rockstar: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/rockstar.mrs",
-  blizzard: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Blizzard/Blizzard.list",
+  blizzard: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/blizzard.mrs",
   ea: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/ea.mrs",
   github: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/github.mrs",
   agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=10",
@@ -383,20 +386,11 @@ async function main(config = {}) {
     agnesSelect("🐸 手动切换", manualNames),
   );
 
-  const domainSets = new Set([
-    "apple_cn",
-    "china_direct",
-    "adobe",
-    "github",
-    "steam_cn",
-    "ea",
-    "rockstar",
-  ]);
   const ruleProviders = {};
-  for (const name of Object.keys(AGNES_URLS)) {
+  for (const [name, url] of Object.entries(AGNES_URLS)) {
     let behavior = "classical";
-    if (name === "cncidr") behavior = "ipcidr";
-    else if (domainSets.has(name)) behavior = "domain";
+    if (url.includes("/geo/geoip/")) behavior = "ipcidr";
+    else if (url.includes("/geo/geosite/")) behavior = "domain";
     ruleProviders[name] = agnesRuleProvider(name, behavior);
   }
 
@@ -418,6 +412,8 @@ async function main(config = {}) {
     "IP-CIDR,192.168.0.0/16,➡️ 国内,no-resolve",
     "IP-CIDR,10.0.0.0/8,➡️ 国内,no-resolve",
     "IP-CIDR,172.16.0.0/12,➡️ 国内,no-resolve",
+    "IP-CIDR,100.64.0.0/10,➡️ 国内,no-resolve",
+    "IP-CIDR,169.254.0.0/16,➡️ 国内,no-resolve",
     "RULE-SET,adobe,REJECT",
     "RULE-SET,adobe_activation,REJECT",
     "RULE-SET,lan,➡️ 国内",
@@ -481,27 +477,33 @@ async function main(config = {}) {
     "RULE-SET,game_download_cn,📥 下载流量",
     "RULE-SET,steam_cn,📥 下载流量",
     "RULE-SET,xunlei,📥 下载流量",
-    "RULE-SET,baidu_cloud,📥 下载流量",
+    "DOMAIN-SUFFIX,pan.baidu.com,📥 下载流量",
+    "DOMAIN-SUFFIX,baidupcs.com,📥 下载流量",
+    "DOMAIN-SUFFIX,pcs.baidu.com,📥 下载流量",
     "GEOSITE,category-public-tracker,📥 下载流量",
 
-    // 7. 国内大盘快速旁路（采用每日更新的 .mrs 二进制基数树，去掉完全重复的 GEOSITE,cn 二次查询）
+    // 7. 国内域名大盘快速旁路（纯域名 .mrs 二进制基数树，不触发本地 DNS 解析）
     "RULE-SET,apple_cn,➡️ 国内",
     "RULE-SET,china_direct,➡️ 国内",
-    "RULE-SET,cncidr,➡️ 国内,no-resolve",
-    "GEOIP,CN,➡️ 国内,no-resolve",
 
-    // 8. 游戏平台联机与商店分流
+    // 8. 游戏平台联机与商店分流（纯域名匹配优先于 IP 规则，遵循 Sukka 域名优先原则）
     "RULE-SET,agnes_game,🎮 Game",
     "RULE-SET,steam,🎮 Game",
     "RULE-SET,rockstar,🎮 Game",
     "RULE-SET,blizzard,🎮 Game",
     "RULE-SET,ea,🎮 Game",
 
-    // 9. 海外兜底与纯 IPv4 安全保护（国外 STUN UDP 3478/5349 直接拒绝，残余 IPv6 流量静默 REJECT）
+    // 9. 海外兜底域名与纯 IP 规则层（所有 IP 规则置于域名规则之后并强制加 no-resolve，兜住电报 MTProto 与 FCM 纯 IP 连接）
     "AND,((NETWORK,udp),(DST-PORT,3478)),REJECT",
     "AND,((NETWORK,udp),(DST-PORT,5349)),REJECT",
     "RULE-SET,foreign_extra,🌍 国外",
     "GEOSITE,geolocation-!cn,🌍 国外",
+    "RULE-SET,telegram_ip,🌍 国外,no-resolve",
+    "RULE-SET,google_ip,📱 Google移动服务,no-resolve",
+    "RULE-SET,cncidr,➡️ 国内,no-resolve",
+    "GEOIP,CN,➡️ 国内,no-resolve",
+    // 过期未映射的残留 Fake-IP（198.18.0.0/16）与残余 IPv6 静默 REJECT，防止直出 WAN 泄露
+    "IP-CIDR,198.18.0.0/16,REJECT,no-resolve",
     "IP-CIDR6,::/0,REJECT,no-resolve",
     "DST-PORT,80,🐟 未匹配流量",
     "DST-PORT,443,🐟 未匹配流量",

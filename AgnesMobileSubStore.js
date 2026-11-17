@@ -59,9 +59,9 @@ const AGNES_MOBILE_URLS = {
   account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=11",
   agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=14",
   agnes_payment: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/Payment.list?v=2",
-  youtube: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTube/YouTube.list",
+  youtube: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/youtube.mrs",
   google_mobile: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/GoogleMobile.list",
-  google: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Google/Google.list",
+  google: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/google.mrs",
   apple_cn: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/apple-cn.mrs",
   agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=10",
   china_direct: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/cn.mrs",
@@ -212,9 +212,9 @@ function main(config = {}) {
     account_safe: agnesMobileRuleProvider("account_safe"),
     agnes_ai: agnesMobileRuleProvider("agnes_ai"),
     agnes_payment: agnesMobileRuleProvider("agnes_payment"),
-    youtube: agnesMobileRuleProvider("youtube"),
+    youtube: agnesMobileRuleProvider("youtube", "domain"),
     google_mobile: agnesMobileRuleProvider("google_mobile"),
-    google: agnesMobileRuleProvider("google"),
+    google: agnesMobileRuleProvider("google", "domain"),
     apple_cn: agnesMobileRuleProvider("apple_cn", "domain"),
     agnes_direct: agnesMobileRuleProvider("agnes_direct"),
     china_direct: agnesMobileRuleProvider("china_direct", "domain"),
@@ -225,10 +225,11 @@ function main(config = {}) {
     "IP-CIDR6,::/0,REJECT,no-resolve",
     "IP-CIDR,10.10.10.0/24,节点选择,no-resolve",
     "IP-CIDR,10.10.20.0/24,节点选择,no-resolve",
-    "GEOIP,private,DIRECT,no-resolve",
     "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
     "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve",
     "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve",
+    "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve",
+    "IP-CIDR,169.254.0.0/16,DIRECT,no-resolve",
     // Global Google WebRTC STUN block (must precede Google rule-sets; never used by domestic apps).
     "AND,((NETWORK,udp),(DST-PORT,19302-19309)),REJECT",
     // Block QUIC (UDP 443) and STUN/TURN (UDP 3478/5349) on fronted overseas sets before they enter the tunnel.
@@ -254,6 +255,8 @@ function main(config = {}) {
     "AND,((NETWORK,udp),(DST-PORT,443)),REJECT",
     "AND,((NETWORK,udp),(DST-PORT,3478)),REJECT",
     "AND,((NETWORK,udp),(DST-PORT,5349)),REJECT",
+    // Reject any expired/unmapped 198.18.0.0/16 Fake-IP locally instead of sending raw Fake-IP into AnyTLS.
+    "IP-CIDR,198.18.0.0/16,REJECT,no-resolve",
     "MATCH,节点选择",
   ];
   return config;
