@@ -57,8 +57,8 @@ const AGNES_DIRECT_DNS = [
 const AGNES_MOBILE_URLS = {
   leak_test: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/LeakTest.list?v=2",
   account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=11",
-  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=13",
-  agnes_payment: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/Payment.list?v=1",
+  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=14",
+  agnes_payment: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/Payment.list?v=2",
   youtube: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTube/YouTube.list",
   google_mobile: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/GoogleMobile.list",
   google: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Google/Google.list",

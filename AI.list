@@ -20,11 +20,13 @@ DOMAIN-SUFFIX,api.anthropic.com
 DOMAIN-SUFFIX,claude.ai
 DOMAIN-SUFFIX,claudeusercontent.com
 DOMAIN-SUFFIX,gemini.google.com
+DOMAIN-SUFFIX,gemini.google
 DOMAIN-SUFFIX,bard.google.com
 DOMAIN-SUFFIX,generativelanguage.googleapis.com
 DOMAIN-SUFFIX,ai.google.dev
 DOMAIN-SUFFIX,generativeai.google
 DOMAIN-SUFFIX,aistudio.google.com
+DOMAIN-SUFFIX,ai.studio
 DOMAIN-SUFFIX,makersuite.google.com
 DOMAIN-SUFFIX,deepmind.com
 DOMAIN-SUFFIX,deepmind.google
@@ -36,6 +38,8 @@ DOMAIN,geminiweb-pa.clients6.google.com
 DOMAIN-SUFFIX,colab.research.google.com
 DOMAIN-SUFFIX,antigravity.google
 DOMAIN,antigravity-unleash.goog
+DOMAIN,antigravity-pa.googleapis.com
+DOMAIN,antigravity.googleapis.com
 DOMAIN,cloudcode-pa.googleapis.com
 DOMAIN,daily-cloudcode-pa.googleapis.com
 DOMAIN,daily-cloudcode-pa.sandbox.googleapis.com

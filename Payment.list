@@ -1,9 +1,11 @@
 DOMAIN-SUFFIX,stripe.com
 DOMAIN-SUFFIX,stripe.network
 DOMAIN-SUFFIX,stripecdn.com
+DOMAIN-SUFFIX,link.com
 DOMAIN-SUFFIX,paypal.com
 DOMAIN-SUFFIX,paypal.me
 DOMAIN-SUFFIX,paypalobjects.com
+DOMAIN-SUFFIX,braintreepayments.com
 DOMAIN-SUFFIX,braintreegateway.com
 DOMAIN-SUFFIX,braintree-api.com
 DOMAIN-SUFFIX,paddle.com
