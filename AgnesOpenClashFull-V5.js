@@ -129,6 +129,8 @@ function agnesRuleProvider(name, behavior = "classical") {
     url,
     path: `./rule_provider/agnes_${name}.${isMrs ? "mrs" : "list"}`,
     interval: 86400,
+    // Route GitHub Raw rule-provider updates via HK auto-failover group to avoid CN WAN TLS EOF.
+    proxy: "香港-自动",
   };
 }
 
