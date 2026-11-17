@@ -21,6 +21,9 @@
  *    & Google binary offload); `.80` full Google ecosystem unified on `🔐 自媒体上传`; mobile X + Grok unified
  *    on `👽 AI` (`AI.list?v=12`); Turnstile/Arkose/Stripe anti-fraud unified (`AccountSafe.list?v=10`);
  *    Google STUN expanded to `19302-19309` and `LeakTest.list?v=2` moved after `:65531` & `.6`.
+ * 6. 2026-11-17: Global overseas payment policy group `💳 海外支付` (`Payment.list?v=1`, default `Webshare-Private`,
+ *    no `DIRECT`); cross-list deduplication (`AccountSafe.list?v=11`, `AI.list?v=13`, `ADirect.list?v=10`);
+ *    redundant `📘 GitHub` / `🙋 Telegram` / `📀 音乐` UI groups merged into `🌍 国外` while keeping rule-providers.
  */
 
 const AGNES_TEST_URL = "http://captive.apple.com/hotspot-detect.html";
@@ -46,8 +49,9 @@ const AGNES_URLS = {
   adobe_activation: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/AdobeActivation/AdobeActivation.list",
   lan: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Lan/Lan.list",
   leak_test: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/LeakTest.list?v=2",
-  account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=10",
-  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=12",
+  account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=11",
+  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=13",
+  agnes_payment: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/Payment.list?v=1",
   youtube: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTube/YouTube.list",
   google_mobile: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/GoogleMobile.list",
   google_fcm: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/GoogleFCM/GoogleFCM.list",
@@ -66,7 +70,7 @@ const AGNES_URLS = {
   blizzard: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Blizzard/Blizzard.list",
   ea: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/ea.mrs",
   github: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/github.mrs",
-  agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=9",
+  agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=10",
   foreign_extra: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ForeignExtra.list?v=2",
   cncidr: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/cn.mrs",
   apple_cn: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/apple-cn.mrs",
@@ -267,6 +271,15 @@ async function main(config = {}) {
     "🐸 手动切换",
     "REJECT",
   ]);
+  addStableGroup("💳 海外支付", [
+    "美国-自动",
+    "日本-自动",
+    "台湾-自动",
+    "新加坡-自动",
+    "香港-自动",
+    "🐸 手动切换",
+    "REJECT",
+  ]);
   addBusinessGroup("📱 Google移动服务", [
     "香港-自动",
     "台湾-自动",
@@ -278,20 +291,6 @@ async function main(config = {}) {
     "🐸 手动切换",
     "REJECT",
   ]);
-  addBusinessGroup("📘 GitHub", [
-    "香港-自动",
-    "DIRECT",
-    "港台日新韩-自动",
-    "台日新韩-自动",
-    "台湾-自动",
-    "日本-自动",
-    "新加坡-自动",
-    "韩国-自动",
-    "美国-自动",
-    "其他-自动",
-    "REJECT",
-    "🐸 手动切换",
-  ]);
   addBusinessGroup("👯‍♂️ TikTok", [
     "台日新韩-自动",
     "台湾-自动",
@@ -300,32 +299,6 @@ async function main(config = {}) {
     "韩国-自动",
     "香港-自动",
     "美国-自动",
-    "REJECT",
-    "🐸 手动切换",
-  ]);
-  addBusinessGroup("🙋 Telegram", [
-    "香港-自动",
-    "港台日新韩-自动",
-    "台湾-自动",
-    "日本-自动",
-    "新加坡-自动",
-    "韩国-自动",
-    "美国-自动",
-    "其他-自动",
-    "REJECT",
-    "🐸 手动切换",
-  ]);
-  addBusinessGroup("📀 音乐", [
-    "香港-自动",
-    "DIRECT",
-    "港台日新韩-自动",
-    "台日新韩-自动",
-    "台湾-自动",
-    "日本-自动",
-    "新加坡-自动",
-    "韩国-自动",
-    "美国-自动",
-    "其他-自动",
     "REJECT",
     "🐸 手动切换",
   ]);
@@ -467,9 +440,10 @@ async function main(config = {}) {
     `AND,((IN-PORT,${AGNES_CREATOR_LISTENER_PORT}),(DOMAIN-SUFFIX,gvt3.com)),📱 Google移动服务`,
     `IN-PORT,${AGNES_CREATOR_LISTENER_PORT},🔐 自媒体上传`,
 
-    // 2. 透明网关：单机自媒体上传（.80 主站/后台/上传/Turnstile/Stripe）与全屋 AI + 手机 X/Grok 同出口防风控
+    // 2. 透明网关：单机自媒体上传（.80 创作者后台/上传）与全屋 AI、海外支付（全屋 + AnyTLS 统一静态出口防风控）
     `AND,((SRC-IP-CIDR,${AGNES_CREATOR_PC_IP}/32),(RULE-SET,account_safe)),🔐 自媒体上传`,
     "RULE-SET,agnes_ai,👽 AI",
+    "RULE-SET,agnes_payment,💳 海外支付",
 
     // 3. 单设备专属（10.10.10.6）：保住内网与 AI 并前置拦截 STUN 后，其余流量一行接管进入社交定位
     `AND,((SRC-IP-CIDR,${AGNES_TARGET_SPOOF_IP}/32),(NETWORK,udp),(DST-PORT,3478)),REJECT`,
@@ -496,9 +470,9 @@ async function main(config = {}) {
     "RULE-SET,google_fcm,📱 Google移动服务",
     "RULE-SET,google,📱 Google移动服务",
     "RULE-SET,tiktok,👯‍♂️ TikTok",
-    "RULE-SET,telegram,🙋 Telegram",
-    "RULE-SET,spotify,📀 音乐",
-    "RULE-SET,github,📘 GitHub",
+    "RULE-SET,telegram,🌍 国外",
+    "RULE-SET,spotify,🌍 国外",
+    "RULE-SET,github,🌍 国外",
 
     // 6. 大流量下载（早于国内大盘，使 SteamCN/网盘/迅雷/海外游戏更新统一归入下载组观测与控制，默认 DIRECT）
     "RULE-SET,game_download,📥 下载流量",

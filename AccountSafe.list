@@ -7,11 +7,7 @@ DOMAIN-SUFFIX,youtu.be
 DOMAIN,accounts.google.com
 DOMAIN,myaccount.google.com
 DOMAIN,oauth2.googleapis.com
-DOMAIN-SUFFIX,x.com
-DOMAIN-SUFFIX,twitter.com
-DOMAIN-SUFFIX,t.co
 DOMAIN-SUFFIX,tweetdeck.com
-DOMAIN-SUFFIX,twitteroauth.com
 DOMAIN-SUFFIX,ads-twitter.com
 DOMAIN-SUFFIX,periscope.tv
 DOMAIN-SUFFIX,pscp.tv
@@ -24,6 +20,3 @@ DOMAIN-SUFFIX,messenger.com
 DOMAIN-SUFFIX,m.me
 DOMAIN-SUFFIX,threads.net
 DOMAIN-SUFFIX,threads.com
-DOMAIN-SUFFIX,challenges.cloudflare.com
-DOMAIN-SUFFIX,stripe.com
-DOMAIN-SUFFIX,stripe.network

@@ -4,16 +4,16 @@
  * The Sub-Store subscription (`agnes-mobile-home` / `BACKHOME`) supplies
  * exactly one `anytls` node (`家中网关-AnyTLS`).
  *
- * Dual-Mode Anti-Leak & V5 Consistency Design (2026-11-07, hardened 2026-11-13):
+ * Dual-Mode Anti-Leak & V5 Consistency Design (2026-11-07, hardened 2026-11-13 & 2026-11-17):
  * 1. Rule Mode (`规则模式`):
  *    - Domestic traffic (`apple_cn`, `agnes_direct`, `china_direct`, `cncidr`, `CN`)
  *      routes to `🏠 国内流量` (defaults to `DIRECT`). When exiting via `DIRECT`,
  *      Mihomo resolves the domain locally via `direct-nameserver` (Ali/DNSPod DoH)
  *      and connects directly from the outside network without going through home.
- *    - Core overseas & anti-fraud sets (`leak_test`, `account_safe`, `agnes_ai`,
- *      `youtube`, `google_mobile`, `google`) are matched BEFORE domestic rules so
- *      `google@cn` (`gstatic.com`, `fonts.googleapis.com`, etc.) and shared auth/payment
- *      domains never leak via outside `DIRECT`.
+ *    - Core overseas, payment & anti-fraud sets (`leak_test`, `account_safe`, `agnes_ai`,
+ *      `agnes_payment`, `youtube`, `google_mobile`, `google`) are matched BEFORE domestic
+ *      rules so `google@cn` (`gstatic.com`, `fonts.googleapis.com`, etc.), shared captchas,
+ *      and overseas payment checkouts (Stripe, PayPal, Paddle, etc.) never leak via `DIRECT`.
  *    - Home LAN (`10.10.10.0/24` — including `:65531` Creator Profile listener),
  *      DMZ (`10.10.20.0/24`), home subdomains (`DOMAIN-SUFFIX,<homeDomain>,节点选择`),
  *      and all non-CN traffic (`MATCH,节点选择`) send the original domain name into
@@ -56,13 +56,14 @@ const AGNES_DIRECT_DNS = [
 
 const AGNES_MOBILE_URLS = {
   leak_test: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/LeakTest.list?v=2",
-  account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=10",
-  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=12",
+  account_safe: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AccountSafe.list?v=11",
+  agnes_ai: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/AI.list?v=13",
+  agnes_payment: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/Payment.list?v=1",
   youtube: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTube/YouTube.list",
   google_mobile: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/GoogleMobile.list",
   google: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Google/Google.list",
   apple_cn: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/apple-cn.mrs",
-  agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=9",
+  agnes_direct: "https://raw.githubusercontent.com/pk32651/rule-runtime/refs/heads/main/ADirect.list?v=10",
   china_direct: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/cn.mrs",
   cncidr: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/cn.mrs",
 };
@@ -210,6 +211,7 @@ function main(config = {}) {
     leak_test: agnesMobileRuleProvider("leak_test"),
     account_safe: agnesMobileRuleProvider("account_safe"),
     agnes_ai: agnesMobileRuleProvider("agnes_ai"),
+    agnes_payment: agnesMobileRuleProvider("agnes_payment"),
     youtube: agnesMobileRuleProvider("youtube"),
     google_mobile: agnesMobileRuleProvider("google_mobile"),
     google: agnesMobileRuleProvider("google"),
@@ -230,10 +232,11 @@ function main(config = {}) {
     // Global Google WebRTC STUN block (must precede Google rule-sets; never used by domestic apps).
     "AND,((NETWORK,udp),(DST-PORT,19302-19309)),REJECT",
     // Block QUIC (UDP 443) and STUN/TURN (UDP 3478/5349) on fronted overseas sets before they enter the tunnel.
-    "AND,((NETWORK,udp),(DST-PORT,443/3478/5349),(OR,((RULE-SET,leak_test),(RULE-SET,account_safe),(RULE-SET,agnes_ai),(RULE-SET,youtube),(RULE-SET,google_mobile),(RULE-SET,google)))),REJECT",
+    "AND,((NETWORK,udp),(DST-PORT,443/3478/5349),(OR,((RULE-SET,leak_test),(RULE-SET,account_safe),(RULE-SET,agnes_ai),(RULE-SET,agnes_payment),(RULE-SET,youtube),(RULE-SET,google_mobile),(RULE-SET,google)))),REJECT",
     "RULE-SET,leak_test,节点选择",
     "RULE-SET,account_safe,节点选择",
     "RULE-SET,agnes_ai,节点选择",
+    "RULE-SET,agnes_payment,节点选择",
     "RULE-SET,youtube,节点选择",
     "RULE-SET,google_mobile,节点选择",
     "RULE-SET,google,节点选择",

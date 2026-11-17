@@ -1,4 +1,8 @@
 /**
+ * [2026-11-17 已封存停更 / FROZEN LEGACY]
+ * 本脚本与 Antigravity.list / Gemini.list / OpenAI.list 原地保留仅防网关 Sub-Store 历史条目 404，
+ * 现行设备统一使用网关 AgnesOpenClashFull-V5.js（含 :65531 专属端口）与外网回家 AgnesMobileSubStore.js。
+ *
  * AGNES PC TUN profile.
  *
  * Use the same Sub-Store collection as the home gateway. The collection
